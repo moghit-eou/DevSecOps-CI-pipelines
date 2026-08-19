@@ -1,3 +1,0 @@
-vulnerabilities:
-  - id: CVE-2026-54515
-    statement: "False positive, not reachable code path"
