@@ -1,9 +1,18 @@
-# ci/Dockerfile
 FROM ubuntu:24.04
 
+# Install base runtimes, build tools, and package managers
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl git sudo ca-certificates python3 python3-pip python-is-python3 nodejs npm docker.io && \
+    curl git sudo ca-certificates python3 python3-pip python-is-python3 \
+    nodejs npm openjdk-21-jdk maven && \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /repo
-COPY platform-backend/ci/ ci/
+WORKDIR /app
+
+COPY ci/ .
+
+
+RUN chmod +x setup-tools.sh && \
+    ./setup-tools.sh --install-tool all
+
+
+WORKDIR /workspace
