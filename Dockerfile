@@ -16,7 +16,7 @@ ENV OSV_IGNOREFILE=/app/suppress_osv_scanner.toml
 ENV IMAGE_NAME=platform-backend:local
 
 
-
+TODO: passed the tools installation during the build stage 
 RUN chmod +x setup-tools.sh && \
     ./setup-tools.sh --install-tool trivy,osv-scanner
 
