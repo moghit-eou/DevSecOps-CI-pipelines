@@ -1,7 +1,10 @@
-.PHONY: build build-sast build-sca build-container-scan sast sca container-scan shell-sast shell-sca shell-container-scan clean
+.PHONY:sast sca container-scan clean
 
-# Directory to scan, override on the CLI, e.g.:
-#   make sca PROJECT=./mip-backend-maven
+# Directory or image to scan, override on the CLI, e.g.:
+#   make sast PROJECT=./mip-backend-maven 
+#   make sca PROJECT=./mip-backend-maven ECOSYSTEM-TYPE= ( maven , npm , python , golang , ... ) 
+#   make container-scan  IMAGE=platform-backend:local
+
 PROJECT ?= .
 IMAGE   ?= app:local
 
