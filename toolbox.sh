@@ -8,14 +8,16 @@
 #   sca               -> mip-toolbox:sca
 #   container-scan    -> mip-toolbox:container-scan
 #
-# Every pipeline is a single `docker run --rm` scoped to one project
-# directory. Nothing to clean up, nothing shared between runs. The image is
-# built automatically on first use.
+# sast/sca are a single `docker run --rm` scoped to one project directory.
+# container-scan needs three (build image, sast, sca, merge is folded into
+# the third run), since that's how container_scan.py's CLI is shaped.
+# Nothing to clean up, nothing shared between runs. Images build
+# automatically on first use -- Docker layer caching makes reruns fast.
 #
 # USAGE
 #   ./toolbox.sh sast            <project-dir>
 #   ./toolbox.sh sca             <project-dir> <ecosystem-type>
-#   ./toolbox.sh container-scan  [image-name]
+#   ./toolbox.sh container-scan  <project-dir> [image-name]
 #
 # EXAMPLES
 #   ./toolbox.sh sast ./mip-backend-golang
@@ -27,21 +29,46 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKERFILE="${REPO_ROOT}/ci/docker/Dockerfile"
 ENV_DIR="${REPO_ROOT}/ci/docker/env"
+IMAGE_PREFIX="mip-toolbox"
 
+usage() {
+  cat >&2 <<'EOF'
+Usage:
+  ./toolbox.sh sast            <project-dir>
+  ./toolbox.sh sca             <project-dir> <ecosystem-type>
+  ./toolbox.sh container-scan  <project-dir> [image-name]
 
+Examples:
+  ./toolbox.sh sast ./mip-backend-golang
+  ./toolbox.sh sca ./mip-backend-maven maven
+  ./toolbox.sh container-scan ./mip-backend-maven platform-backend:local
+EOF
+  exit 1
+}
+
+build_stage() {
+  local target="$1" tag="$2"
+  docker build -q -f "$DOCKERFILE" --target "$target" -t "$tag" "$REPO_ROOT" >/dev/null
+}
 
 # --- one function per pipeline ----------------------------------------------
 
 run_sast() {
-#todo
+  local project_dir="${1:?Usage: toolbox.sh sast <project-dir>}"
+  local tag="${IMAGE_PREFIX}:sast"
+  build_stage sast-toolbox "$tag"
+  docker run --rm \
+    -v "$(cd "$project_dir" && pwd):/workspace" \
+    --env-file "${ENV_DIR}/sast.env" \
+    "$tag"
 }
 
 run_sca() {
-  #todo
+  TODO: implement sca pipeline
 }
 
 run_container_scan() {
- #todo
+  TODO: implement container-scan pipeline
 }
 
 # --- entrypoint ---------------------------------------------------------
