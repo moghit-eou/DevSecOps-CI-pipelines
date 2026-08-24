@@ -64,7 +64,15 @@ run_sast() {
 }
 
 run_sca() {
-  TODO:
+  local project_dir="${1:?Usage: toolbox.sh sca <project-dir> <ecosystem-type>}"
+  local ecosystem="${2:?Usage: toolbox.sh sca <project-dir> <ecosystem-type>}"
+  local tag="${IMAGE_PREFIX}:sca"
+  build_stage sca-toolbox "$tag"
+  docker run --rm \
+    -v "$(cd "$project_dir" && pwd):/workspace" \
+    --env-file "${ENV_DIR}/sca.env" \
+    -e "SBOM_ECOSYSTEM=${ecosystem}" \
+    "$tag"
 }
 
 run_container_scan() {
