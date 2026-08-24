@@ -48,7 +48,7 @@ EOF
 
 build_stage() {
   local target="$1" tag="$2"
-  docker build -q -f "$DOCKERFILE" --target "$target" -t "$tag" "$REPO_ROOT" >/dev/null
+  docker build -f "$DOCKERFILE" --target "$target" -t "$tag" "$REPO_ROOT" >/dev/null
 }
 
 # --- one function per pipeline ----------------------------------------------
@@ -64,7 +64,7 @@ run_sast() {
 }
 
 run_sca() {
-  TODO: implement sca pipeline
+  TODO:
 }
 
 run_container_scan() {
