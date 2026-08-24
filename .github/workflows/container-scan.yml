@@ -13,12 +13,90 @@ jobs:
     permissions:
       contents: read
       security-events: write # required for uploading results to github security
+    env:
+      IMAGE_NAME: platform-backend:testing
+      CONTAINER_SCAN_MERGED_SARIF_OUTPUT: container-scan-platform-backend-merged.sarif
+
+      # SCA / CVE
+      TRIVY_IGNOREFILE: ci/suppress_trivy.yaml
+      OSV_IGNOREFILE: ci/suppress_osv_scanner.toml
+      TRIVY_SCA_SARIF_OUTPUT: sca-trivy-container.sarif
+      OSV_SCA_SARIF_OUTPUT: sca-osv-container.sarif
+
+      # SAST /Linting
+      SEMGREP_CONFIG_RULESETS: >-
+              semgrep-rules/dockerfile auto
+      OPENGREP_SAST_SARIF_OUTPUT: sast-opengrep-dockerfile.sarif
+      HADOLINT_SAST_SARIF_OUTPUT: sast-hadolint-dockerfile.sarif
+
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      - name: Run Container Scanning pipeline
-        uses: ./.github/actions/container-scan
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
         with:
-          project-directory: mip-backend-maven
-          image-name: platform-backend:testing
+          # renovate: datasource=python-version depName=python
+          python-version: '3.14.4'
+
+      - name: Build Docker image
+        run: docker build -t ${{ env.IMAGE_NAME }} .
+
+      - name: Setup tools
+        run: |
+          bash ci/setup-tools.sh \
+          --install-tool trivy,osv-scanner,opengrep,hadolint,semgrep-rules
+
+      - name: Run SAST scanning
+        run: python ci/container_scan.py --scan-type sast
+
+      - name: Run SCA scanning
+        if: always()
+        run: python ci/container_scan.py --scan-type sca --image ${{ env.IMAGE_NAME }}
+
+      - name: Upload Trivy SARIF to GitHub Security tab
+        id: upload_trivy
+        if: always()
+        uses: github/codeql-action/upload-sarif@c35d1b164463ee62a100735382aaaa525c5d3496 #v2.25.6
+        with:
+          sarif_file: ${{ env.TRIVY_SCA_SARIF_OUTPUT }}
+          category: trivy-container-scanning
+
+      - name: Upload OSV Scanner SARIF to GitHub Security tab
+        id: upload_osv
+        if: always()
+        uses: github/codeql-action/upload-sarif@c35d1b164463ee62a100735382aaaa525c5d3496 #v2.25.6
+        with:
+          sarif_file: ${{ env.OSV_SCA_SARIF_OUTPUT }}
+          category: osv-scanner-container-scanning
+
+      - name: Upload OpenGrep SARIF to GitHub Security tab
+        id: upload_opengrep
+        if: always()
+        uses: github/codeql-action/upload-sarif@c35d1b164463ee62a100735382aaaa525c5d3496 #v2.25.6
+        with:
+          sarif_file: ${{ env.OPENGREP_SAST_SARIF_OUTPUT }}
+          category: opengrep-sast
+
+      - name: Upload Hadolint SARIF to GitHub Security tab
+        id: upload_hadolint
+        if: always()
+        uses: github/codeql-action/upload-sarif@c35d1b164463ee62a100735382aaaa525c5d3496 #v2.25.6
+        with:
+          sarif_file: ${{ env.HADOLINT_SAST_SARIF_OUTPUT }}
+          category: hadolint-sast
+
+      - name: Merge all SARIF reports
+        if: always()
+        run: |
+          python ci/container_scan.py \
+            --merge-sarif "${{ env.TRIVY_SCA_SARIF_OUTPUT }}" "${{ env.OSV_SCA_SARIF_OUTPUT }}" "${{ env.OPENGREP_SAST_SARIF_OUTPUT }}" "${{ env.HADOLINT_SAST_SARIF_OUTPUT }}" \
+            --merge-output "${{ env.CONTAINER_SCAN_MERGED_SARIF_OUTPUT }}"
+
+      - name: Upload SARIF artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+        with:
+          name: container-scan-sarif-report
+          path: ${{ env.CONTAINER_SCAN_MERGED_SARIF_OUTPUT }}
+          retention-days: 30
