@@ -132,7 +132,8 @@ fi
 case "$SBOM_ECOSYSTEM" in
   maven)
     echo "Generating SBOM for Maven project"
-    mvn org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom -q
+    mvn -B -ntp dependency:resolve -q
+    mvn -B -ntp org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom -q
     ;;
   npm)
     echo "Generating SBOM for NPM project"

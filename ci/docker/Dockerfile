@@ -27,9 +27,18 @@ ENTRYPOINT ["python3", "/app/ci/sast_scan.py"]
 
 
 # =============================================================================
-# Stage: sca-toolbox -- Trivy + OSV-Scanner + Maven (for SBOM generation)
+# Stage: sca-toolbox -- Trivy + OSV-Scanner + Maven/Node/Go....etc (for SBOM generation)
 # =============================================================================
 FROM toolbox-base AS sca-toolbox
+
+# One toolchain per SBOM ecosystem the repo actually has
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      maven \
+
+RUN bash /app/ci/setup-tools.sh --install-tool trivy,osv-scanner
+
+WORKDIR /workspace
+ENTRYPOINT ["/app/ci/docker/entrypoints/sca-entrypoint.sh"]
 
 #Todo for later 
 
