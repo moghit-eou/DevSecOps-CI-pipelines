@@ -1,4 +1,5 @@
 *.sarif
 docker-command.txt
 target/
-semgrep-rules/
+semgrep-rules
+exp/
