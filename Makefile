@@ -1,3 +1,2 @@
-.PHONY: build-sca 
-
-
+build-sca:
+	./toolbox.sh build sca
