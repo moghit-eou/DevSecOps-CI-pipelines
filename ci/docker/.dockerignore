@@ -1,0 +1,6 @@
+**/.git
+**/node_modules
+**/target
+**/*.sarif
+**/semgrep-rules
+ci/docker/env/.env

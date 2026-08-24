@@ -1,0 +1,93 @@
+name: 'DevSecOps SAST (OpenGrep)'
+description: >
+  Static Application Security Testing via OpenGrep against the calling
+  repo's checked-out source. Reusable from any repository -- pulls the
+  scanner scripts from this toolkit repo at a pinned ref, so callers never
+  need to vendor ci/*.py themselves.
+
+inputs:
+  toolkit-repository:
+    description: 'owner/repo of this DevSecOps pipelines toolkit'
+    required: false
+    default: ${{ github.repository }}
+  toolkit-ref:
+    description: 'Git ref/tag/SHA of the toolkit to pin to. Defaults to the calling commit when used inside this repo itself.'
+    required: false
+    default: ${{ github.sha }}
+  python-version:
+    required: false
+    default: '3.14.4'
+  scan-directory:
+    description: 'Directory to scan, relative to the caller repo root'
+    required: false
+    default: '.'
+  semgrep-config-rulesets:
+    description: 'Space-separated OpenGrep --config values'
+    required: false
+    default: >-
+      .devsecops-toolkit/semgrep-rules/generic .devsecops-toolkit/semgrep-rules/problem-based-packs
+      .devsecops-toolkit/semgrep-rules/bash .devsecops-toolkit/semgrep-rules/java auto
+      .devsecops-toolkit/semgrep-rules/yaml .devsecops-toolkit/semgrep-rules/package_managers p/default
+  opengrep-exclude:
+    description: 'Space-separated OpenGrep --exclude patterns'
+    required: false
+    default: '*.sarif .devsecops-toolkit/ ci/ Dockerfile* .pre-commit-config.yaml docs/** README.md AGENTS.md'
+  upload-sarif:
+    description: 'Upload results to the GitHub Security tab'
+    required: false
+    default: 'true'
+  sarif-category:
+    required: false
+    default: 'opengrep-app'
+
+outputs:
+  sarif-path:
+    description: 'Path to the produced SARIF report, relative to the caller repo root'
+    value: ${{ steps.run.outputs.sarif-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout DevSecOps toolkit (scanner scripts + rulesets)
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      with:
+        repository: ${{ inputs.toolkit-repository }}
+        ref: ${{ inputs.toolkit-ref }}
+        path: .devsecops-toolkit
+
+    - name: Set up Python
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Setup tools
+      shell: bash
+      run: bash .devsecops-toolkit/ci/setup-tools.sh --install-tool opengrep,semgrep-rules
+      working-directory: .devsecops-toolkit
+
+    - name: Run SAST scan
+      id: run
+      shell: bash
+      working-directory: ${{ inputs.scan-directory }}
+      env:
+        SEMGREP_CONFIG_RULESETS: ${{ inputs.semgrep-config-rulesets }}
+        OPENGREP_EXCLUDE: ${{ inputs.opengrep-exclude }}
+        OPENGREP_SARIF_OUTPUT: sast-opengrep-app.sarif
+      run: |
+        python "${GITHUB_WORKSPACE}/.devsecops-toolkit/ci/sast_scan.py"
+        echo "sarif-path=${{ inputs.scan-directory }}/sast-opengrep-app.sarif" >> "$GITHUB_OUTPUT"
+
+    - name: Upload SARIF to GitHub Security tab
+      if: always() && inputs.upload-sarif == 'true'
+      uses: github/codeql-action/upload-sarif@c35d1b164463ee62a100735382aaaa525c5d3496 #v2.25.6
+      with:
+        sarif_file: ${{ steps.run.outputs.sarif-path }}
+        category: ${{ inputs.sarif-category }}
+
+    - name: Upload SARIF artifact
+      if: always()
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+      with:
+        name: sast-scan-sarif-report
+        path: ${{ steps.run.outputs.sarif-path }}
+        retention-days: 30
