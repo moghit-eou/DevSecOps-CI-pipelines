@@ -1,4 +1,0 @@
-*.sarif
-docker-command.txt
-target/
-semgrep-rules/
