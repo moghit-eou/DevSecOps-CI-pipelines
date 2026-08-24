@@ -32,8 +32,7 @@ ENTRYPOINT ["python3", "/app/ci/sast_scan.py"]
 FROM toolbox-base AS sca-toolbox
 
 # One toolchain per SBOM ecosystem the repo actually has
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      maven \
+RUN apt-get update && apt-get install -y --no-install-recommends maven 
 
 RUN bash /app/ci/setup-tools.sh --install-tool trivy,osv-scanner
 
