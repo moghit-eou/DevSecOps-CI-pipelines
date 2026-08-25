@@ -36,7 +36,7 @@ usage() {
 Usage:
   ./toolbox.sh sast            <project-dir>
   ./toolbox.sh sca             <project-dir> <ecosystem-type>
-  ./toolbox.sh container-scan  <project-dir> [image-name] ( and scan type )
+  ./toolbox.sh container-scan  <project-dir> [image-name] [scan-type]   # scan-type: sast|sca|both (default: both)
 
 Examples:
   ./toolbox.sh sast ./mip-backend-golang
