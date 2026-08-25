@@ -36,12 +36,13 @@ usage() {
 Usage:
   ./toolbox.sh sast            <project-dir>
   ./toolbox.sh sca             <project-dir> <ecosystem-type>
-  ./toolbox.sh container-scan  <project-dir> [image-name] [scan-type]   # scan-type: sast|sca|both (default: both)
+  ./toolbox.sh container-scan  <image-name> <sast|sca> [project-dir]
 
 Examples:
   ./toolbox.sh sast ./mip-backend-golang
   ./toolbox.sh sca ./mip-backend-maven maven
-  ./toolbox.sh container-scan ./mip-backend-maven platform-backend:local
+  ./toolbox.sh container-scan platform-backend:local sca
+  ./toolbox.sh container-scan platform-backend:local sast ./mip-backend-maven
 EOF
   exit 1
 }

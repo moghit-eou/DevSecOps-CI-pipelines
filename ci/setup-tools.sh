@@ -165,7 +165,7 @@ case "$SBOM_ECOSYSTEM" in
     go install "github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@${CYCLONEDX_GOMOD_VERSION}"
     "$(go env GOPATH)/bin/cyclonedx-gomod" mod -json -output target/bom.json
     ;;
-  generic)
+  generic|auto)
     # Filesystem-based scan via Syft (not build-integrated), less accurate
     # than the plugins above, use only when no dedicated ecosystem case exists.
     # Add your own case above for a specific ecosystem/plugin if you need
