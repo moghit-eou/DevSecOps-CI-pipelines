@@ -17,8 +17,8 @@ if [[ "${1:-}" == "bash" || "${1:-}" == "sh" ]]; then
   exec "$@"
 fi
 
-echo "[sca-entrypoint] Generating SBOM (ecosystem: ${SBOM_ECOSYSTEM:-maven})"
-bash /app/ci/setup-tools.sh --sbom-ecosystem "${SBOM_ECOSYSTEM:-maven}"
+echo "[sca-entrypoint] Generating SBOM (ecosystem: ${SBOM_ECOSYSTEM})"
+bash /app/ci/setup-tools.sh --sbom-ecosystem "${SBOM_ECOSYSTEM}"
 
 echo "[sca-entrypoint] Running SCA scan"
 exec python3 /app/ci/sca_scan.py "$@"

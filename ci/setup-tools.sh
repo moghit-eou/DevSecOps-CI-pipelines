@@ -135,7 +135,7 @@ if should_install "hadolint"; then
   echo "Hadolint installed OK"
 fi
 
-# --- Syft (installed on-demand, only when SBOM_ECOSYSTEM=generic) --------
+# --- Syft ----------------------------------------------------------------
 install_syft() {
   echo "[setup-tools] Installing Syft ${SYFT_VERSION}"
   SYFT_TARBALL="syft_${SYFT_VERSION#v}_linux_amd64.tar.gz"

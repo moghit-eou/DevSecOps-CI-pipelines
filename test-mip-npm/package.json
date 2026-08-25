@@ -1,0 +1,92 @@
+{
+  "name": "fl-platform",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "prestart": "node scripts/check-node-version.mjs",
+    "start": "ng serve",
+    "prebuild": "node scripts/check-node-version.mjs",
+    "build": "ng build",
+    "prewatch": "node scripts/check-node-version.mjs",
+    "watch": "ng build --watch --configuration development",
+    "pretest": "node scripts/check-node-version.mjs",
+    "test": "ng test"
+  },
+  "private": true,
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0",
+    "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@angular/cdk": "^22.0.5",
+    "@angular/common": "^22.0.7",
+    "@angular/compiler": "^22.0.7",
+    "@angular/core": "^22.0.7",
+    "@angular/forms": "^22.0.7",
+    "@angular/material": "^22.0.5",
+    "@angular/platform-browser": "^22.0.7",
+    "@angular/router": "^22.0.7",
+    "@fortawesome/fontawesome-free": "^7.3.1",
+    "d3": "^7.9.0",
+    "echarts": "6.1.0",
+    "echarts-gl": "2.1.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "ngx-echarts": "^22.0.0",
+    "rxjs": "~7.8.2",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^22.0.7",
+    "@angular/cli": "^22.0.7",
+    "@angular/compiler-cli": "^22.0.7",
+    "@types/d3": "^7.4.3",
+    "@types/jasmine": "~6.0.0",
+    "jasmine-core": "~6.3.0",
+    "karma": "~6.4.4",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.1",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.2.0",
+    "typescript": "~6.0.3"
+  },
+  "overrides": {
+    "@babel/core": "7.29.7",
+    "@hono/node-server": "2.0.12",
+    "dompurify": "3.4.12",
+    "esbuild": "0.28.1",
+    "express@4.22.2": {
+      "body-parser": "1.20.6"
+    },
+    "fast-uri": "3.1.5",
+    "http-proxy-middleware": "3.0.7",
+    "karma": {
+      "body-parser": "1.20.6"
+    },
+    "minimatch@3.1.5": {
+      "brace-expansion": "1.1.18"
+    },
+    "minimatch@10.2.5": {
+      "brace-expansion": "5.0.9"
+    },
+    "node-gyp": {
+      "tar": "7.5.22"
+    },
+    "pacote": {
+      "tar": "7.5.22"
+    },
+    "piscina": "5.2.0",
+    "postcss": "8.5.18",
+    "shell-quote": "1.9.0",
+    "tmp": "0.2.7",
+    "undici": "7.29.0",
+    "uuid": "11.1.1",
+    "vite": "7.3.6",
+    "webpack-dev-server": "5.2.6",
+    "ws": "8.21.0",
+    "zrender": "6.1.0",
+    "ip-address": "10.3.1",
+    "socket.io-parser": "4.2.7"
+  }
+}
