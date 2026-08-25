@@ -142,7 +142,7 @@ case "$SBOM_ECOSYSTEM" in
     echo "Generating SBOM for NPM project"
     npx --yes "@cyclonedx/cyclonedx-npm@${CYCLONEDX_NPM_VERSION}" --output-file target/bom.json
     ;;
-  golang)
+  golang|go)
     echo "Generating SBOM for Go project"
     mkdir -p target
     go install "github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@${CYCLONEDX_GOMOD_VERSION}"
