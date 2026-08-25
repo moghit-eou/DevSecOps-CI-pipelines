@@ -29,6 +29,7 @@ def run_trivy():
     cmd = [
         "trivy", "sbom", SBOM_PATH,
         "--format", "sarif",
+        "-q",
         "--ignorefile", TRIVY_IGNOREFILE,
         "--output", TRIVY_SARIF_OUTPUT
     ]

@@ -146,7 +146,7 @@ case "$SBOM_ECOSYSTEM" in
     echo "Generating SBOM for Go project"
     mkdir -p target
     go install "github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@${CYCLONEDX_GOMOD_VERSION}"
-    "$(go env GOPATH)/bin/cyclonedx-gomod" mod -output target/bom.json
+    "$(go env GOPATH)/bin/cyclonedx-gomod" mod -json -output target/bom.json
     ;;
   none)
     echo "No SBOM generation needed"
