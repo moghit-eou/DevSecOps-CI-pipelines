@@ -1,0 +1,24 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0
+  hooks:
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+      exclude: .bumpversion.cfg
+    - id: check-merge-conflict
+      exclude: LICENSE
+    - id: check-added-large-files
+    - id: check-yaml
+    - id: check-json
+    - id: pretty-format-json
+      args: ["--autofix"]
+      exclude: slack.json
+    - id: check-xml
+    - id: detect-private-key
+    - id: check-case-conflict
+    - id: mixed-line-ending
+
+- repo: https://github.com/gitleaks/gitleaks
+  rev: v8.30.0
+  hooks:
+    - id: gitleaks
