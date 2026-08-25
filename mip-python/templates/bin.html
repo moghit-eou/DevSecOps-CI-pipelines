@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bin - Trashed Items</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main_content.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bin.css') }}">
+</head>
+
+<body>
+    <header class="dashboard-header">
+        <div class="bin-header-content">
+            <h1>🗑️ Bin</h1>
+            <div class="bin-actions">
+                <a href="{{ url_for('home_page') }}" class="back-btn">← Back to Files</a>
+                {% if items %}
+                <form action="{{ url_for('empty_bin') }}" method="post"
+                    onsubmit="return confirm('Are you sure you want to permanently delete ALL items in the bin? This cannot be undone!');"
+                    style="display: inline;">
+                    <button type="submit" class="empty-bin-btn">Empty Bin</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <form action="{{ url_for('logout') }}" method="get" style="display: inline;">
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    </header>
+
+    <div class="dashboard-body">
+        <aside class="sidebar bin-sidebar">
+            <div class="bin-info">
+                <p class="info-text">Items in the bin will be permanently deleted after 30 days (Google Drive policy)
+                </p>
+                <div class="bin-stats">
+                    <strong>{{ items|length }}</strong> items in bin
+                </div>
+            </div>
+
+            <a href="{{ url_for('home_page') }}" class="home-page-button">🏠 Home</a>
+        </aside>
+
+        <main class="main-content bin-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            {% if items %}
+            <ul class="files-grid">
+                {% for item in items %}
+                <li class="file-card bin-item">
+                    <div class="file-icon">
+                        {% if item.mimeType == 'application/vnd.google-apps.folder' %}
+                        <span class="folder-icon">📁</span>
+                        {% else %}
+                        <img src="{{ url_for('static', filename='icons/' + (item.type | default('other')) + '.png') }}"
+                            alt="{{ item.type | default('file') }} icon">
+                        {% endif %}
+                    </div>
+                    <h3>{{ item.name }}</h3>
+                    <div class="meta">
+                        {% if item.mimeType != 'application/vnd.google-apps.folder' %}
+                        Size: {{ (item.size | default(0) | int / (1024*1024)) | round(3) }} MB
+                        {% else %}
+                        <span class="folder-label">Folder</span>
+                        {% endif %}
+                    </div>
+                    <div class="actions bin-actions">
+                        <a class="restore" href="{{ url_for('restore_file', file_id=item.id) }}"
+                            onclick="return confirm('Restore this item?');">
+                            Restore
+                        </a>
+                        <a class="delete-permanent" href="{{ url_for('delete_permanently', file_id=item.id) }}"
+                            onclick="return confirm('Permanently delete this item? This cannot be undone!');">
+                            Delete Forever
+                        </a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🗑️</div>
+                <h2>Bin is empty</h2>
+                <p>No deleted items found. Deleted files and folders will appear here.</p>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,200 @@
+/* static/css/bin.css */
+
+/* Bin-specific header */
+.bin-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.bin-header-content h1 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+.bin-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text);
+    background-color: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-m);
+    text-decoration: none;
+    transition: all var(--transition-base);
+    min-height: 40px;
+}
+
+.back-btn:hover {
+    background-color: var(--surface);
+    border-color: var(--muted);
+    transform: translateX(-2px);
+}
+
+.back-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.empty-bin-btn {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: white;
+    background-color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-m);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    min-height: 40px;
+}
+
+.empty-bin-btn:hover {
+    background-color: var(--danger-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.empty-bin-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5);
+}
+
+/* Bin Sidebar */
+.bin-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.bin-info {
+    padding: var(--space-4);
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+}
+
+.info-text {
+    font-size: var(--text-sm);
+    color: var(--muted);
+    line-height: var(--line-height-relaxed);
+    margin-bottom: var(--space-3);
+}
+
+.bin-stats {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.bin-stats strong {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* Bin Content */
+.bin-content {
+    /* Inherits from .main-content */
+}
+
+/* Bin Item (extends file-card) */
+.bin-item {
+    /* Inherits from .file-card */
+}
+
+.bin-item .actions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.bin-item .actions a {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    border-radius: var(--radius-m);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+}
+
+.bin-item .actions a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.bin-item .actions .restore {
+    color: var(--success);
+    background-color: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.bin-item .actions .restore:hover {
+    background-color: var(--success);
+    color: white;
+    border-color: var(--success);
+}
+
+.bin-item .actions .delete-permanent {
+    color: var(--danger);
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.bin-item .actions .delete-permanent:hover {
+    background-color: var(--danger);
+    color: white;
+    border-color: var(--danger);
+}
+
+/* Empty Bin State */
+.bin-content .empty-state {
+    /* Inherits from .empty-state in main_content.css */
+}
+
+.bin-content .empty-icon {
+    font-size: 5rem;
+    opacity: 0.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .bin-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .bin-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 480px) {
+    .bin-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .back-btn,
+    .empty-bin-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

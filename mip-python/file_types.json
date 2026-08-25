@@ -1,0 +1,119 @@
+{
+    "_google_to_category": {
+        "application/vnd.google-apps.document": "doc",
+        "application/vnd.google-apps.spreadsheet": "excel",
+        "application/vnd.google-apps.presentation": "ppt",
+        "application/vnd.google-apps.folder": "folder"
+    },
+    "image": {
+        "mimes": [],
+        "ext": [
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".gif",
+            ".webp",
+            ".bmp",
+            ".tiff",
+            ".svg"
+        ]
+    },
+    "video": {
+        "mimes": [],
+        "ext": [
+            ".mp4",
+            ".mov",
+            ".avi",
+            ".mkv",
+            ".webm"
+        ]
+    },
+    "pdf": {
+        "mimes": [
+            "application/pdf"
+        ],
+        "ext": [
+            ".pdf"
+        ]
+    },
+    "doc": {
+        "mimes": [
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.oasis.opendocument.text"
+        ],
+        "ext": [
+            ".doc",
+            ".docx",
+            ".odt"
+        ]
+    },
+    "excel": {
+        "mimes": [
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.oasis.opendocument.spreadsheet",
+            "text/csv"
+        ],
+        "ext": [
+            ".xls",
+            ".xlsx",
+            ".ods",
+            ".csv"
+        ]
+    },
+    "ppt": {
+        "mimes": [
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.oasis.opendocument.presentation"
+        ],
+        "ext": [
+            ".ppt",
+            ".pptx",
+            ".odp"
+        ]
+    },
+    "audio": {
+        "mimes": [
+            "audio/mpeg",
+            "audio/wav",
+            "audio/aac",
+            "audio/ogg",
+            "audio/flac"
+        ],
+        "ext": [
+            ".mp3",
+            ".wav",
+            ".aac",
+            ".ogg",
+            ".flac"
+        ]
+    },
+    "text": {
+        "mimes": [
+            "text/plain",
+            "text/markdown"
+        ],
+        "ext": [
+            ".txt",
+            ".md"
+        ]
+    },
+    "archive": {
+        "mimes": [
+            "application/zip",
+            "application/x-7z-compressed",
+            "application/x-rar-compressed",
+            "application/x-tar",
+            "application/gzip"
+        ],
+        "ext": [
+            ".zip",
+            ".7z",
+            ".rar",
+            ".tar",
+            ".gz"
+        ]
+    }
+}

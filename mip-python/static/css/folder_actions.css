@@ -1,0 +1,260 @@
+/* static/css/folder_actions.css */
+
+/* Folder Actions (Kebab Menu) */
+.folder-actions {
+  position: relative;
+  display: inline-block;
+}
+
+.folder-actions summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--muted);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  list-style: none;
+  user-select: none;
+}
+
+.folder-actions summary::-webkit-details-marker {
+  display: none;
+}
+
+.folder-actions summary:hover {
+  background-color: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.folder-actions summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.folder-actions[open] summary {
+  background-color: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+/* Action List (Dropdown Menu) */
+.action-list {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  min-width: 160px;
+  margin: 0;
+  padding: var(--space-2);
+  list-style: none;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-xl);
+  z-index: 100;
+  animation: menuSlideIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes menuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.action-list li {
+  margin: 0;
+  padding: 0;
+}
+
+.action-list li+li {
+  border-top: 1px solid var(--border);
+  margin-top: var(--space-1);
+  padding-top: var(--space-1);
+}
+
+.action-list a,
+.action-list .rename-btn {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text);
+  text-decoration: none;
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  font-family: inherit;
+}
+
+.action-list a:hover,
+.action-list .rename-btn:hover {
+  background-color: var(--surface);
+  color: var(--accent);
+}
+
+.action-list a:focus-visible,
+.action-list .rename-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* Rename Modal */
+#rename-modal.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+#rename-modal.modal.show {
+  display: flex;
+}
+
+#rename-modal .modal-content {
+  position: relative;
+  max-width: 500px;
+  width: 90%;
+  padding: var(--space-6);
+  background-color: var(--card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+#rename-modal h3 {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--space-5);
+}
+
+#rename-modal .form-group {
+  margin-bottom: var(--space-5);
+}
+
+#rename-modal label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+#rename-modal input[type="text"] {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background-color: var(--surface);
+  transition: all var(--transition-base);
+}
+
+#rename-modal input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-focus);
+}
+
+#rename-modal .form-buttons {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
+
+#rename-modal .cancel-btn,
+#rename-modal .rename-submit-btn {
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: 1px solid transparent;
+  min-height: 44px;
+}
+
+#rename-modal .cancel-btn {
+  color: var(--text);
+  background-color: transparent;
+  border-color: var(--border);
+}
+
+#rename-modal .cancel-btn:hover {
+  background-color: var(--surface);
+  border-color: var(--muted);
+}
+
+#rename-modal .cancel-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#rename-modal .rename-submit-btn {
+  color: var(--accent-contrast);
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+#rename-modal .rename-submit-btn:hover {
+  background-color: var(--accent-hover);
+  box-shadow: var(--shadow-md);
+}
+
+#rename-modal .rename-submit-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  #rename-modal .modal-content {
+    width: 95%;
+    padding: var(--space-5);
+  }
+
+  #rename-modal .form-buttons {
+    flex-direction: column;
+  }
+
+  #rename-modal .cancel-btn,
+  #rename-modal .rename-submit-btn {
+    width: 100%;
+  }
+}

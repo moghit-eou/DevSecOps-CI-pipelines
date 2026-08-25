@@ -1,0 +1,70 @@
+{# templates/folder_actions.html #}
+<details class="folder-actions">
+  <summary>⋮</summary>
+  <ul class="action-list">
+    <li>
+      <a href="{{ url_for('delete_folder', folder_id=folder.id) }}?parent_id={{ current_folder }}">
+        Delete
+      </a>
+    </li>
+    <li>
+      <a type="button" class="rename-btn" data-rename-url="{{ url_for('rename_folder', folder_id=folder.id) }}"
+        data-parent-id="{{ current_folder }}">
+        Rename
+      </a>
+    </li>
+  </ul>
+</details>
+
+<div id="rename-modal" class="modal">
+  <div class="modal-content">
+    <h3>Rename Folder</h3>
+    <form id="rename-form" method="post" action="">
+      <input type="hidden" name="parent_id" id="modal-parent-id" value="">
+      <div class="form-group">
+        <label for="new_name">New name:</label>
+        <input type="text" name="new_name" id="new_name" required>
+      </div>
+      <div class="form-buttons">
+        <button type="button" class="cancel-btn">Cancel</button>
+        <button type="submit" class="rename-submit-btn">Rename</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('rename-modal');
+    const form = document.getElementById('rename-form');
+    const parentId = document.getElementById('modal-parent-id');
+    const nameInput = document.getElementById('new_name');
+    const cancel = document.querySelector('.cancel-btn');
+
+    document.addEventListener('click', e => {
+      if (e.target.classList.contains('rename-btn')) {
+        e.preventDefault();
+        form.action = e.target.dataset.renameUrl;
+        parentId.value = e.target.dataset.parentId || '';
+        nameInput.value = '';
+        modal.classList.add('show');
+        nameInput.focus();
+      }
+    });
+
+    cancel.addEventListener('click', () => {
+      modal.classList.remove('show');
+    });
+
+    modal.addEventListener('click', e => {
+      if (e.target === modal) modal.classList.remove('show');
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && modal.classList.contains('show')) {
+        modal.classList.remove('show');
+      }
+    });
+  });
+</script>

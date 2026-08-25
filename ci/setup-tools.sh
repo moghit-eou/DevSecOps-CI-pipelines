@@ -154,6 +154,7 @@ case "$SBOM_ECOSYSTEM" in
     # Add your own case above for a specific ecosystem/plugin if you need
     # better accuracy than this fallback provides.
     echo "Generating SBOM via generic filesystem scan (less accurate)"
+    install_syft
     mkdir -p target
     syft . -o cyclonedx-json=target/bom.json
     ;;

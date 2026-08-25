@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Storage App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/folder_actions.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/upload_error.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main_content.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loader.css') }}">
+
+</head>
+
+<body>
+    {% include "components/header.html" %}
+    <div id="global-loader" class="loader-overlay">
+        <div class="loader"></div>
+        <p>Loading ...</p>
+    </div>
+
+    <div class="dashboard-body">
+        {% include "components/sidebar.html" %}
+        {% include "components/main_content.html" %}
+    </div>
+
+
+
+    <script src="{{url_for('static', filename = 'loader.js')}}"></script>
+    <script src="{{ url_for('static', filename='live_search.js') }}"></script>
+    <script src="{{ url_for('static', filename='upload_error.js')}}"></script>
+    <script src="{{ url_for('static', filename='upload_error.js')}}"></script>
+
+</body>
+
+</html>

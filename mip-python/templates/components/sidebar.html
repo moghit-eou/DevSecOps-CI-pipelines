@@ -1,0 +1,50 @@
+<aside class="sidebar">
+    <div class="upload-container">
+        <div id="uploadError" class="upload-error"></div>
+
+        <!-- File Upload Form -->
+        <form id="uploadForm" action="{{ url_for('upload') }}?folder_id={{ current_folder }}" method="post"
+            enctype="multipart/form-data">
+            <input type="file" id="uploaded_file" name="uploaded_file" multiple>
+            <button type="submit">📄 Upload Files</button>
+        </form>
+
+        <!-- Folder Upload Form -->
+        <form id="uploadFolderForm" action="{{ url_for('upload_folder') }}?folder_id={{ current_folder }}" method="post"
+            enctype="multipart/form-data">
+            <input type="file" id="folder_input" name="files[]" webkitdirectory directory multiple>
+            <button type="submit">📁 Upload Folder</button>
+        </form>
+    </div>
+
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal" class="close">&times;</span>
+            <p id="modalMessage">🚨 Please choose a file before uploading.</p>
+        </div>
+    </div>
+
+    <div class="add-folder-container">
+        <form id="addFolderForm" action="{{ url_for('add_folder') }}?parent_id={{ current_folder }}" method="post">
+            <input type="text" name="folder_name" placeholder="New folder name" required>
+            <button type="submit">Add Folder</button>
+        </form>
+    </div>
+
+    <h2>Navigation</h2>
+
+    <a href="{{ url_for('home_page') }}" class="home-page-button">🏠 Home</a>
+    <a href="{{ url_for('bin_page') }}" class="bin-page-button">🗑️ Bin</a>
+
+    <h2>Folders</h2>
+
+    <ul class="folders-list">
+        {% for folder in folders %}
+        <li>
+            <a href="{{ url_for('home_page', folder_id=folder.id) }}" class="folder-link">📁 {{ folder.name }}</a>
+            {% include "components/folder_actions.html" %}
+        </li>
+        {% endfor %}
+    </ul>
+    <script src="{{ url_for('static', filename='upload_error.js') }}"></script>
+</aside>

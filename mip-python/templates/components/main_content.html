@@ -1,0 +1,42 @@
+<main class="main-content">
+
+    {% if files %}
+    <ul class="files-grid">
+        {% for file in files %}
+        <li class="file-card">
+            <div class="file-icon">
+                <img src="{{ url_for('static', filename='icons/' + file.type + '.png') }}" alt="{{ file.type }} icon">
+            </div>
+            <h3>{{ file.name }}</h3>
+            <div class="meta">
+                Size: {{ (file.size | default(0) | int / (1024*1024)) | round(3) }} MB
+            </div>
+            <div class="actions">
+                <a class="view" href="{{ file.webViewLink }}" target="_blank">View</a>
+                <a class="download" href="{{ url_for('download_file', file_id=file.id) }}">Download</a>
+                <a class="delete"
+                    href="{{ url_for('delete_file', file_id=file.id) }}?folder_id={{ current_folder }}">Delete</a>
+            </div>
+        </li>
+        {% endfor %}
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% for p in range(1, total_pages + 1) %}
+            {% if p == current_page %}
+            <span class="page-number active">{{ p }}</span>
+            {% else %}
+            <a href="{{ url_for('home_page', folder_id=current_folder if current_folder != 'root' else None, page=p, type=wanted_type, sort=sort_by) }}"
+                class="page-number">{{ p }}</a>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+    </ul>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h2>Nothing here</h2>
+        <p>No files found. Try uploading or changing your filter.</p>
+    </div>
+    {% endif %}
+</main>

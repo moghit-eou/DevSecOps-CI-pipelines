@@ -1,0 +1,44 @@
+<header class="dashboard-header">
+    <div class="search-container">
+        <input id="searchBox" class="search-input" type="text" placeholder="Search files and folders..."
+            autocomplete="off">
+        <i class="filter-icon fas fa-filter"></i>
+        <div id="suggestions"></div>
+    </div>
+
+    <div class="Filtering">
+        <form method="get" action="{{ url_for('home_page', folder_id=current_folder) }}">
+            <label>
+                Type:
+                <select name="type">
+                    {% set t = wanted_type or 'all' %}
+                    <option value="all" {{ 'selected' if t=='all' }}>All</option>
+                    <option value="image" {{ 'selected' if t=='image' }}>Images</option>
+                    <option value="video" {{ 'selected' if t=='video' }}>Videos</option>
+                    <option value="pdf" {{ 'selected' if t=='pdf' }}>PDF</option>
+                    <option value="doc" {{ 'selected' if t=='doc' }}>Doc</option>
+                    <option value="excel" {{ 'selected' if t=='excel' }}>Excel</option>
+                    <option value="ppt" {{ 'selected' if t=='ppt' }}>PPT</option>
+                    <option value="audio" {{ 'selected' if t=='audio' }}>Audio</option>
+                    <option value="text" {{ 'selected' if t=='text' }}>Text</option>
+                    <option value="archive" {{ 'selected' if t=='archive' }}>Archive</option>
+                    <option value="other" {{ 'selected' if t=='other' }}>Other</option>
+                </select>
+            </label>
+
+            <label>
+                Sort:
+                <select name="sort">
+                    <option value="name" {{ 'selected' if (sort_by or 'name' )=='name' }}>Name</option>
+                    <option value="type" {{ 'selected' if sort_by=='type' }}>Type</option>
+                </select>
+            </label>
+
+            <button type="submit">Apply</button>
+        </form>
+    </div>
+
+    <form action="{{ url_for('logout') }}" method="get" style="display: inline;">
+        <button type="submit" class="logout-btn">Logout</button>
+    </form>
+</header>
