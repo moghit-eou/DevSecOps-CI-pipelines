@@ -3,7 +3,7 @@
 # Directory or image to scan, override on the CLI, e.g.:
 #   make sast PROJECT=./mip-backend-maven
 #   make sca PROJECT=./mip-backend-maven ECOSYSTEM=maven  (maven, npm, generic, golang)
-#   make container-scan PROJECT=./mip-backend-maven IMAGE=platform-backend:local
+#   make container-scan PROJECT=./mip-backend-maven IMAGE=platform-backend:local SCAN-TYPE=(sca or sast or both)
 
 PROJECT   ?= .
 ECOSYSTEM ?= maven
