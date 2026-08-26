@@ -56,4 +56,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends docker.io \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
-ENTRYPOINT ["/app/ci/docker/entrypoints/container-scan-entrypoint.sh"]
+ENTRYPOINT ["python3", "/app/ci/container_scan.py"]
