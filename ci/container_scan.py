@@ -45,15 +45,12 @@ def run_trivy():
     cmd = [
         "trivy", "image",
         IMAGE_NAME,
-        "-q",
         "--format", "sarif",
         "--ignorefile", TRIVY_IGNOREFILE,
-        "--output", TRIVY_SCA_SARIF_OUTPUT,   
-        "--download-db-only",
+        "--output", TRIVY_SCA_SARIF_OUTPUT,
     ]
 
-    if TRIVY_DB_REPOSITORY:
-        cmd += ["--db-repository", TRIVY_DB_REPOSITORY]
+    logger.info(f"{BOLD}Running: {' '.join(cmd)}{RESET}")
 
     return subprocess.run(cmd).returncode
 
@@ -67,6 +64,9 @@ def run_osv_scanner():
         "--output-file", OSV_SCA_SARIF_OUTPUT,
         "--verbosity", "error"
     ]
+    
+    logger.info(f"{BOLD}Running: {' '.join(cmd)}{RESET}")
+
     exit_code = subprocess.run(cmd).returncode
     if exit_code == 1:
         return 0  # OSV Scanner returns 1 if vulnerabilities are found, but we want to continue the pipeline
@@ -138,6 +138,7 @@ def run_hadolint():
         "--failure-threshold", "error",
         "--format", "sarif",
     ]
+    logger.info(f"{BOLD}Running: {' '.join(cmd)}{RESET}")
     with open(HADOLINT_SAST_SARIF_OUTPUT, "w") as f:
         result = subprocess.run(cmd, stdout=f)
 

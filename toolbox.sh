@@ -99,6 +99,7 @@ run_container_scan() {
     # Scans the already-built image -- needs the socket, no project mount.
     docker run --rm \
       -v /var/run/docker.sock:/var/run/docker.sock \
+      -v "$(cd "$project_dir" && pwd):/workspace" \
       --env-file "${ENV_DIR}/container-scan.env" \
       "$tag" --scan-type sca --image "$image_name"
   fi

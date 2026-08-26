@@ -34,6 +34,7 @@ def run_trivy():
         "--ignorefile", TRIVY_IGNOREFILE,
         "--output", TRIVY_SARIF_OUTPUT
     ]
+    logger.info(f"{BOLD}Running: {' '.join(cmd)}{RESET}")
     return subprocess.run(cmd).returncode
 
 def run_osv_scanner():
@@ -45,6 +46,7 @@ def run_osv_scanner():
         "--format", "sarif",
         "--output-file", OSV_SARIF_OUTPUT
     ]
+    logger.info(f"{BOLD}Running: {' '.join(cmd)}{RESET}")
     exit_code = subprocess.run(cmd).returncode
     if exit_code == 1:
         return 0  # OSV Scanner returns 1 if vulnerabilities are found, but we want to continue the pipeline

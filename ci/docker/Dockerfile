@@ -13,7 +13,11 @@ WORKDIR /app
 COPY ci/setup-tools.sh /app/ci/setup-tools.sh
 RUN chmod +x /app/ci/setup-tools.sh \
     && bash /app/ci/setup-tools.sh --install-tool \
-        trivy,osv-scanner
+        trivy,osv-scanner,hadolint,opengrep,semgrep-rules
+
+ENV TRIVY_CACHE_DIR=/app/trivy-db-cache
+RUN trivy image --download-db-only --cache-dir "${TRIVY_CACHE_DIR}" \
+ && trivy image --download-java-db-only --cache-dir "${TRIVY_CACHE_DIR}"
 
 COPY ci/ /app/ci/
 RUN chmod +x /app/ci/docker/entrypoints/*.sh
