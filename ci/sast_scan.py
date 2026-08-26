@@ -28,6 +28,7 @@ OPENGREP_EXCLUDE = os.getenv(
 OPENGREP_SARIF_OUTPUT = os.getenv("OPENGREP_SARIF_OUTPUT", "sast-opengrep-app.sarif")
 
 def run_opengrep():
+    logger.info(f"{BOLD}[opengrep] Starting scan...{RESET}")
     base_cmd = ["opengrep", "scan"] + \
         [f"--config {config}" for config in SEMGREP_CONFIG_RULESETS] + \
         [f"--exclude={pattern}" for pattern in OPENGREP_EXCLUDE]

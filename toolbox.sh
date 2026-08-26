@@ -77,7 +77,31 @@ run_sca() {
 }
 
 run_container_scan() {
-  TODO: implement container-scan pipeline
+  local image_name="${1:?Usage: toolbox.sh container-scan <image-name> <sast|sca> [project-dir]}"
+  local scan_type="${2:?Usage: toolbox.sh container-scan <image-name> <sast|sca> [project-dir]}"
+  local project_dir="${3:-.}"
+  local tag="${IMAGE_PREFIX}:container-scan"
+
+  case "$scan_type" in
+    sast|sca) ;;
+    *) echo "[toolbox] scan-type must be 'sast' or 'sca', got: $scan_type" >&2; exit 1 ;;
+  esac
+
+  build_stage container-scan-toolbox "$tag"
+
+  if [[ "$scan_type" == "sast" ]]; then
+    # Lints the Dockerfile -- needs the project dir mounted, no socket.
+    docker run --rm \
+      -v "$(cd "$project_dir" && pwd):/workspace" \
+      --env-file "${ENV_DIR}/container-scan.env" \
+      "$tag" --scan-type sast
+  else
+    # Scans the already-built image -- needs the socket, no project mount.
+    docker run --rm \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      --env-file "${ENV_DIR}/container-scan.env" \
+      "$tag" --scan-type sca --image "$image_name"
+  fi
 }
 
 # --- entrypoint ---------------------------------------------------------

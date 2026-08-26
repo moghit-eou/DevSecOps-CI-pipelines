@@ -20,40 +20,52 @@ logging.basicConfig(
 logger = logging.getLogger("container-scan-orchestrator")
 
 # --- Configurable values
-IMAGE_NAME = os.getenv("IMAGE_NAME", "platform-backend:local")
+IMAGE_NAME = os.getenv("IMAGE_NAME", "<image_name>")  # Default placeholder, should be overridden by CLI argument
 
 # --- SCA / CVE (Trivy + OSV) ---
-TRIVY_IGNOREFILE = os.getenv("TRIVY_IGNOREFILE", "ci/suppress_trivy.yaml")
-OSV_IGNOREFILE = os.getenv("OSV_IGNOREFILE", "ci/suppress_osv_scanner.toml")
-TRIVY_SCA_SARIF_OUTPUT = os.getenv("TRIVY_SCA_SARIF_OUTPUT", "sca-trivy-container.sarif")
-OSV_SCA_SARIF_OUTPUT = os.getenv("OSV_SCA_SARIF_OUTPUT", "sca-osv-container.sarif")
+TRIVY_IGNOREFILE = os.getenv("TRIVY_IGNOREFILE", "<path_to_trivy_ignorefile>")  # Default placeholder, should be overridden by env
+OSV_IGNOREFILE = os.getenv("OSV_IGNOREFILE", "<path_to_osv_ignorefile>")  # Default placeholder, should be overridden by env
+TRIVY_SCA_SARIF_OUTPUT = os.getenv("TRIVY_SCA_SARIF_OUTPUT", "<path_to_trivy_sarif_output>")  # Default placeholder, should be overridden by env
+OSV_SCA_SARIF_OUTPUT = os.getenv("OSV_SCA_SARIF_OUTPUT", "<path_to_osv_sarif_output>")  # Default placeholder, should be overridden by env
+TRIVY_DB_REPOSITORY = os.getenv("TRIVY_DB_REPOSITORY", "docker.io/aquasec/trivy-db:2")  # Default to official Trivy DB repo
 
 # --- SAST/Code Linting (OpenGrep + Hadolint) ---
 SEMGREP_CONFIG_RULESETS = os.getenv(
     "SEMGREP_CONFIG_RULESETS",
     "semgrep-rules/dockerfile"
 ).split()
-OPENGREP_SAST_SARIF_OUTPUT = os.getenv("OPENGREP_SAST_SARIF_OUTPUT", "sast-opengrep-dockerfile.sarif")
-HADOLINT_SAST_SARIF_OUTPUT = os.getenv("HADOLINT_SAST_SARIF_OUTPUT", "sast-hadolint-dockerfile.sarif")
+OPENGREP_SAST_SARIF_OUTPUT = os.getenv("OPENGREP_SAST_SARIF_OUTPUT", "<path_to_opengrep_sarif_output>")  # Default placeholder, should be overridden by env
+HADOLINT_SAST_SARIF_OUTPUT = os.getenv("HADOLINT_SAST_SARIF_OUTPUT", "<path_to_hadolint_sarif_output>")  # Default placeholder, should be overridden by env
 
 # --- Functions to run each SCA tool and handle their outputs
 def run_trivy():
+
+    logger.info(f"{BOLD}[trivy] Starting image scan...{RESET}")
+
     cmd = [
         "trivy", "image",
         IMAGE_NAME,
+        "-q",
         "--format", "sarif",
         "--ignorefile", TRIVY_IGNOREFILE,
-        "--output", TRIVY_SCA_SARIF_OUTPUT
+        "--output", TRIVY_SCA_SARIF_OUTPUT,   
+        "--download-db-only",
     ]
+
+    if TRIVY_DB_REPOSITORY:
+        cmd += ["--db-repository", TRIVY_DB_REPOSITORY]
+
     return subprocess.run(cmd).returncode
 
 def run_osv_scanner():
+    logger.info(f"{BOLD}[osv-scanner] Starting image scan...{RESET}")
     cmd = [
         "osv-scanner", "scan", "image",
         IMAGE_NAME,
         "--config", OSV_IGNOREFILE,
         "--format", "sarif",
-        "--output-file", OSV_SCA_SARIF_OUTPUT
+        "--output-file", OSV_SCA_SARIF_OUTPUT,
+        "--verbosity", "error"
     ]
     exit_code = subprocess.run(cmd).returncode
     if exit_code == 1:
@@ -120,6 +132,7 @@ def handle_sca():
 
 # --- Functions to run each SAST tool and handle their outputs
 def run_hadolint():
+    logger.info(f"{BOLD}[hadolint] Starting Dockerfile lint...{RESET}")
     cmd = [
         "hadolint", "Dockerfile",
         "--failure-threshold", "error",
@@ -131,6 +144,7 @@ def run_hadolint():
     return result.returncode
 
 def run_opengrep():
+    logger.info(f"{BOLD}[opengrep] Starting Dockerfile scan...{RESET}")
     base_cmd = ["opengrep", "scan", "--include=Dockerfile", "-q"] + \
         [f"--config {config}" for config in SEMGREP_CONFIG_RULESETS]
 

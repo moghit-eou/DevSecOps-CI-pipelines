@@ -26,6 +26,7 @@ OSV_SARIF_OUTPUT = os.getenv("OSV_SARIF_OUTPUT", "osv-scanner-platform-backend.s
 SCA_MERGED_SARIF_OUTPUT = os.getenv("SCA_MERGED_SARIF_OUTPUT", "SCA-platform-backend-merged.sarif")
 
 def run_trivy():
+    logger.info(f"{BOLD}[trivy] Starting SBOM scan...{RESET}")
     cmd = [
         "trivy", "sbom", SBOM_PATH,
         "--format", "sarif",
@@ -36,6 +37,7 @@ def run_trivy():
     return subprocess.run(cmd).returncode
 
 def run_osv_scanner():
+    logger.info(f"{BOLD}[osv-scanner] Starting SBOM scan...{RESET}")
     cmd = [
         "osv-scanner", "scan", "source",
         "--lockfile", SBOM_PATH,
