@@ -120,9 +120,11 @@ The `ECOSYSTEM` (a.k.a. `SBOM_ECOSYSTEM`) you pick decides how the SBOM gets gen
 
 Whenever you pick a specific ecosystem other than `generic`, its build tool must be installed in the Dockerfile, otherwise SBOM generation will fail. Want another ecosystem (gradle, rust, python, etc)? Two additions are needed, shown below with Gradle as the example.
 
-### 1. Install the build tool: `ci/docker/Dockerfile`, `sca-toolbox` stage
+### 1. Install the build tool: `ci/docker/Dockerfile`, `toolbox-base` stage
 
-This is the stage that already installs `maven`, `nodejs npm`, and `golang-go`, add your new ecosystem's tool to the same line:
+Right now nothing is installed there. 
+
+This stage is shared by every pipeline, including `make sca` and `make container-scan SCAN_TYPE=sca`, so add your ecosystem's build tool to it:
 
 ```dockerfile
 # ci/docker/Dockerfile
@@ -131,9 +133,8 @@ FROM toolbox-base AS sca-toolbox
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git sudo python3 python3-pip \
-      maven nodejs npm golang-go \
-      gradle \
-    && rm -rf /var/lib/apt/lists/*     # add your ecosystem's package here, e.g. gradle
+      maven npm golang-go gradle ... \ # <--- add your ecosystem's package here, e.g. gradle, maven ...etc
+    && rm -rf /var/lib/apt/lists/*     
 ```
 
 ### 2. Add the matching SBOM case: `ci/setup-tools.sh`
