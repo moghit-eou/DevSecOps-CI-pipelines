@@ -151,7 +151,7 @@ install_syft() {
 # --- SBOM generation ----------------------------------------------------
 case "$SBOM_ECOSYSTEM" in
   maven)
-    echo "Generating SBOM for Maven project"
+    echo "Generating SBOM for Maven project ... this may take a while"
     mvn -B -ntp dependency:resolve -q
     mvn -B -ntp org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom -q
     ;;
