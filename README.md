@@ -115,7 +115,7 @@ The `ECOSYSTEM` (a.k.a. `SBOM_ECOSYSTEM`) you pick decides how the SBOM gets gen
 | `maven` | `cyclonedx-maven-plugin` | already installed (`maven`) in `sca-toolbox` |
 | `npm` | `@cyclonedx/cyclonedx-npm` | already installed (`nodejs npm`) in `sca-toolbox` |
 | `golang` / `go` | `cyclonedx-gomod` | already installed (`golang-go`) in `sca-toolbox` |
-| `generic` / `auto` (default fallback) | Syft filesystem scan (less accurate) | no extra tools needed, works for any ecosystem |
+| `generic` / `auto` (default fallback) | Trivy filesystem scan (less accurate) | no extra tools needed, works for any ecosystem |
 | `none` | skipped | no SBOM generated |
 
 Whenever you pick a specific ecosystem other than `generic`, its build tool must be installed in the Dockerfile, otherwise SBOM generation will fail. Want another ecosystem (gradle, rust, python, etc)? Two additions are needed, shown below with Gradle as the example.
