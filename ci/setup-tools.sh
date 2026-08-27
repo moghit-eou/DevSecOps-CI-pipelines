@@ -158,7 +158,7 @@ case "$SBOM_ECOSYSTEM" in
   npm)
     echo "Generating SBOM for NPM project"
     npx --yes "@cyclonedx/cyclonedx-npm@${CYCLONEDX_NPM_VERSION}" --output-file target/bom.json
-    ;;
+    ;;i
   golang|go)
     echo "Generating SBOM for Go project"
     mkdir -p target
@@ -166,14 +166,13 @@ case "$SBOM_ECOSYSTEM" in
     "$(go env GOPATH)/bin/cyclonedx-gomod" mod -json -output target/bom.json
     ;;
   generic|auto)
-    # Filesystem-based scan via Syft (not build-integrated), less accurate
+    # Filesystem-based scan via Trivy (not build-integrated), less accurate
     # than the plugins above, use only when no dedicated ecosystem case exists.
     # Add your own case above for a specific ecosystem/plugin if you need
     # better accuracy than this fallback provides.
-    echo "Generating SBOM via generic filesystem scan (less accurate)"
-    install_syft
+    echo "Generating SBOM via generic Trivy filesystem scan (less accurate)"
     mkdir -p target
-    syft . -o cyclonedx-json=target/bom.json
+    trivy fs --format cyclonedx --output target/bom.json .
     ;;
   none)
     echo "No SBOM generation needed"
