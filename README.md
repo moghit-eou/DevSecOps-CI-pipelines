@@ -98,12 +98,9 @@ Each pipeline reads its config from an `.env` file in `ci/docker/env/`, mounted 
   * `SEMGREP_CONFIG_RULESETS`: which Semgrep/OpenGrep rule directories to scan with (space separated)
   * `OPENGREP_SARIF_OUTPUT` / `OPENGREP_EXCLUDE`: where the SARIF report is written, and which paths to skip
 * **`sca.env`**
-  * `SBOM_ECOSYSTEM`: which ecosystem to generate the SBOM for (`maven`, `npm`, `golang`, your own, or `generic`/`none`)
-  * `SBOM_PATH`: where the generated SBOM lands (default `target/bom.json`)
   * `TRIVY_IGNOREFILE` / `OSV_IGNOREFILE`: paths to the suppression files for known, accepted CVEs
   * `TRIVY_SARIF_OUTPUT` / `OSV_SARIF_OUTPUT` / `SCA_MERGED_SARIF_OUTPUT`: where each tool's report (and the merged report) is written
 * **`container-scan.env`**
-  * `IMAGE_NAME`: the image being scanned
   * `TRIVY_IGNOREFILE` / `OSV_IGNOREFILE`: same suppression files as above, reused here
   * `SEMGREP_CONFIG_RULESETS`: rule set used for the Dockerfile SAST pass
   * `TRIVY_SCA_SARIF_OUTPUT` / `OSV_SCA_SARIF_OUTPUT`: image scan reports
@@ -250,4 +247,4 @@ OpenGrep / Hadolint findings are rule level; suppress those at the rule itself.
 
 ## License
 
-Free to use.
+Free to use. No restrictions.
