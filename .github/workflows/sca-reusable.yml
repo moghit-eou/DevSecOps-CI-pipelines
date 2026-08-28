@@ -23,4 +23,5 @@ jobs:
         uses: ./.github/actions/sca-scan
         with:
           ecosystem: auto
+          scan_path: ./test-mip-maven
           sca_merged_sarif_output: ${{ env.SCA_MERGED_SARIF_OUTPUT }}
