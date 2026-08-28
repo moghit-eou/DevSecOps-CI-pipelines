@@ -20,4 +20,4 @@ jobs:
       - name: Run container scan
         uses: ./.github/actions/container-scan
         with:
-          dockerfile_path: ./mip-backend-maven
+          dockerfile_path: ./test-mip-maven
