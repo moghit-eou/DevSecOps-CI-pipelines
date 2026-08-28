@@ -1,0 +1,20 @@
+name: Simple CI
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Step 1
+        run: echo "Starting the workflow"
+
+      - name: Step 2
+        run: echo "Installing dependencies"
+
+      - name: Step 3
+        run: echo "Running tests"
+
+      - name: Step 4
+        run: echo "Build complete"
