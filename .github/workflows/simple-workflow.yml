@@ -13,13 +13,13 @@ jobs:
 
     steps:
       - name: Step 1
-        run: echo {{env.FIRST_STEP}}
+        run: echo ${{env.FIRST_STEP}}
 
       - name: Step 2
-        run: echo {{env.SECOND_STEP}} 
+        run: echo ${{env.SECOND_STEP}} 
 
       - name: Step 3
-        run: echo {{env.THIRD_STEP}}
+        run: echo ${{env.THIRD_STEP}}
 
       - name: Step 4
         run: echo "Build complete"
