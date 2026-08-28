@@ -2,15 +2,13 @@ name: 'SCA Scan'
 description: 'Runs SBOM-based SCA scan (Trivy + OSV) and uploads results'
 inputs:
   ecosystem:
-    description: 'SBOM ecosystem for setup-tools.sh. Use "auto" (default) for a generic Trivy filesystem scan — no extra setup steps needed in the caller.'
-    required: false
+    description: 'SBOM ecosystem for setup-tools.sh. Use "auto" (default) for a generic Trivy filesystem scan.'
+    required: true
     default: 'auto'
-  python_version:
-    required: false
-    default: '3.14.4'
-  sbom_path:
-    required: false
-    default: 'target/bom.json'
+  scan_path:
+    description: 'Path to scan (relative to repo root). Defaults to repo root.'
+    required: true
+    default: '.'
   trivy_ignorefile:
     required: false
     default: 'ci/suppress_trivy.yaml'
@@ -19,10 +17,10 @@ inputs:
     default: 'ci/suppress_osv_scanner.toml'
   trivy_sarif_output:
     required: false
-    default: 'trivy-app.sarif'
+    default: 'trivy-report.sarif'
   osv_sarif_output:
     required: false
-    default: 'osv-scanner-app.sarif'
+    default: 'osv-scanner-report.sarif'
   sca_merged_sarif_output:
     required: false
     default: 'SCA-app-merged.sarif'
@@ -40,11 +38,11 @@ runs:
 
     - name: Setup tools
       shell: bash
-      run: bash ci/setup-tools.sh --install-tool trivy,osv-scanner --sbom-ecosystem ${{ inputs.ecosystem }}
-      env:
-        SBOM_PATH: ${{ inputs.sbom_path }}
-        TRIVY_IGNOREFILE: ${{ inputs.trivy_ignorefile }}
-        OSV_IGNOREFILE: ${{ inputs.osv_ignorefile }}
+      run: |
+        bash ci/setup-tools.sh \
+          --install-tool trivy,osv-scanner \
+          --sbom-ecosystem ${{ inputs.ecosystem }} \
+          --scan-path ${{ inputs.scan_path }}
 
     - name: Run SCA tools
       shell: bash
@@ -55,6 +53,7 @@ runs:
         OSV_IGNOREFILE: ${{ inputs.osv_ignorefile }}
         TRIVY_SARIF_OUTPUT: ${{ inputs.trivy_sarif_output }}
         OSV_SARIF_OUTPUT: ${{ inputs.osv_sarif_output }}
+        SCAN_PATH: ${{ inputs.scan_path }}
 
     - name: Upload merged SARIF to GitHub Security tab
       if: always()

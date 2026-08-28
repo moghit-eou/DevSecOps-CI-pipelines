@@ -42,6 +42,7 @@ trap 'rm -rf "${TMP_DIR}"' EXIT
 # --- Flag parsing -----------------------------------------------------
 INSTALL_TOOL="none"
 SBOM_ECOSYSTEM="none"
+SCAN_PATH="."
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -53,6 +54,11 @@ while [[ $# -gt 0 ]]; do
     --sbom-ecosystem)
       [[ $# -ge 2 ]] || { echo "[setup-tools] --sbom-ecosystem requires a value (e.g. maven|npm|none)" >&2; exit 1; }
       SBOM_ECOSYSTEM="$2"
+      shift 2
+      ;;
+    --scan-path)
+      [[ $# -ge 2 ]] || { echo "[setup-tools] --scan-path requires a value (e.g. .|src)" >&2; exit 1; }
+      SCAN_PATH="$2"
       shift 2
       ;;
     *)
@@ -149,13 +155,9 @@ case "$SBOM_ECOSYSTEM" in
     "$(go env GOPATH)/bin/cyclonedx-gomod" mod -json -output target/bom.json
     ;;
   generic|auto)
-    # Filesystem-based scan via Trivy (not build-integrated), less accurate
-    # than the plugins above, use only when no dedicated ecosystem case exists.
-    # Add your own case above for a specific ecosystem/plugin if you need
-    # better accuracy than this fallback provides.
     echo "Generating SBOM via generic Trivy filesystem scan (less accurate)"
     mkdir -p target
-    trivy fs --format cyclonedx --output target/bom.json .
+    trivy fs --format cyclonedx --output target/bom.json "${SCAN_PATH:-.}"
     ;;
   none)
     echo "No SBOM generation needed"
