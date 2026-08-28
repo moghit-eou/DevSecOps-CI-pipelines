@@ -19,4 +19,6 @@ jobs:
       - name: Run container scan
         uses: ./.github/actions/container-scan
         with:
-          dockerfile_path: ./mip-backend-maven
+          dockerfile_path: backend/
+          image_name: platform-backend:testing
+          container_scan_merged_sarif_output: container-scan-platform-backend-merged.sarif

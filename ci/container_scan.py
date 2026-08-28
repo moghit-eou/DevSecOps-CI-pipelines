@@ -27,7 +27,6 @@ TRIVY_IGNOREFILE = os.getenv("TRIVY_IGNOREFILE", "<path_to_trivy_ignorefile>")  
 OSV_IGNOREFILE = os.getenv("OSV_IGNOREFILE", "<path_to_osv_ignorefile>")  # Default placeholder, should be overridden by env
 TRIVY_SCA_SARIF_OUTPUT = os.getenv("TRIVY_SCA_SARIF_OUTPUT", "<path_to_trivy_sarif_output>")  # Default placeholder, should be overridden by env
 OSV_SCA_SARIF_OUTPUT = os.getenv("OSV_SCA_SARIF_OUTPUT", "<path_to_osv_sarif_output>")  # Default placeholder, should be overridden by env
-TRIVY_DB_REPOSITORY = os.getenv("TRIVY_DB_REPOSITORY", "docker.io/aquasec/trivy-db:2")  # Default to official Trivy DB repo
 
 # --- SAST/Code Linting (OpenGrep + Hadolint) ---
 SEMGREP_CONFIG_RULESETS = os.getenv(
