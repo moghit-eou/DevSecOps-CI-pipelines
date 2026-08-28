@@ -93,9 +93,15 @@ runs:
       shell: bash
       run: |
         python ci/container_scan.py \
-          --merge-sarif "${{ env.TRIVY_SCA_SARIF_OUTPUT }}" "${{ env.OSV_SCA_SARIF_OUTPUT }}" "${{ env.OPENGREP_SAST_SARIF_OUTPUT }}" "${{ env.HADOLINT_SAST_SARIF_OUTPUT }}" \
-          --merge-output "${{ env.CONTAINER_SCAN_MERGED_SARIF_OUTPUT }}"
-
+          --merge-sarif "${{ inputs.trivy_sca_sarif_output }}" "${{ inputs.osv_sca_sarif_output }}" "${{ inputs.opengrep_sast_sarif_output }}" "${{ inputs.hadolint_sast_sarif_output }}" \
+          --merge-output "${{ inputs.container_scan_merged_sarif_output }}"
+      env:
+        TRIVY_SCA_SARIF_OUTPUT: ${{ inputs.trivy_sca_sarif_output }}
+        OSV_SCA_SARIF_OUTPUT: ${{ inputs.osv_sca_sarif_output }}
+        OPENGREP_SAST_SARIF_OUTPUT: ${{ inputs.opengrep_sast_sarif_output }}
+        HADOLINT_SAST_SARIF_OUTPUT: ${{ inputs.hadolint_sast_sarif_output }}
+        CONTAINER_SCAN_MERGED_SARIF_OUTPUT: ${{ inputs.container_scan_merged_sarif_output }}
+      
 
     - name: Upload merged SARIF to GitHub Security tab
       if: always()
