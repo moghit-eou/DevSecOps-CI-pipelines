@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Simple CI
-        uses: moghit-eou/DevSecOps-CI-pipelines/.github/actions/simple-ci
+        uses: moghit-eou/DevSecOps-CI-pipelines/.github/actions/simple-ci@feat/reusable-workflow
         with:
           first_step: 'Installing deps'
           second_step: 'Testing'
