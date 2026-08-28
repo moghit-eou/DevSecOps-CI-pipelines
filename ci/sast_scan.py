@@ -25,7 +25,7 @@ OPENGREP_EXCLUDE = os.getenv(
     "OPENGREP_EXCLUDE",
     "*.sarif ci/ Dockerfile* .pre-commit-config.yaml docs/** README.md AGENTS.md"
 ).split()
-OPENGREP_SARIF_OUTPUT = os.getenv("OPENGREP_SARIF_OUTPUT", "sast-opengrep-app.sarif")
+OPENGREP_SARIF_OUTPUT = os.getenv("OPENGREP_SARIF_OUTPUT", "sast-opengrep.sarif")
 
 def run_opengrep():
     logger.info(f"{BOLD}[opengrep] Starting scan...{RESET}")
@@ -77,3 +77,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

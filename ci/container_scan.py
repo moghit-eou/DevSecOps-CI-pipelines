@@ -21,21 +21,21 @@ logger = logging.getLogger("container-scan-orchestrator")
 
 # --- Configurable values
 IMAGE_NAME = os.getenv("IMAGE_NAME", "<image_name>")  # Default placeholder, should be overridden by CLI argument
+DOCKERFILE_PATH = os.environ.get("DOCKERFILE_PATH", "Dockerfile")
 
 # --- SCA / CVE (Trivy + OSV) ---
 TRIVY_IGNOREFILE = os.getenv("TRIVY_IGNOREFILE", "<path_to_trivy_ignorefile>")  # Default placeholder, should be overridden by env
 OSV_IGNOREFILE = os.getenv("OSV_IGNOREFILE", "<path_to_osv_ignorefile>")  # Default placeholder, should be overridden by env
-TRIVY_SCA_SARIF_OUTPUT = os.getenv("TRIVY_SCA_SARIF_OUTPUT", "<path_to_trivy_sarif_output>")  # Default placeholder, should be overridden by env
-OSV_SCA_SARIF_OUTPUT = os.getenv("OSV_SCA_SARIF_OUTPUT", "<path_to_osv_sarif_output>")  # Default placeholder, should be overridden by env
-TRIVY_DB_REPOSITORY = os.getenv("TRIVY_DB_REPOSITORY", "docker.io/aquasec/trivy-db:2")  # Default to official Trivy DB repo
+TRIVY_SCA_SARIF_OUTPUT = os.getenv("TRIVY_SCA_SARIF_OUTPUT", "container-sca-trivy.sarif")
+OSV_SCA_SARIF_OUTPUT = os.getenv("OSV_SCA_SARIF_OUTPUT", "container-sca-osv-scanner.sarif")
 
 # --- SAST/Code Linting (OpenGrep + Hadolint) ---
 SEMGREP_CONFIG_RULESETS = os.getenv(
     "SEMGREP_CONFIG_RULESETS",
     "semgrep-rules/dockerfile"
 ).split()
-OPENGREP_SAST_SARIF_OUTPUT = os.getenv("OPENGREP_SAST_SARIF_OUTPUT", "<path_to_opengrep_sarif_output>")  # Default placeholder, should be overridden by env
-HADOLINT_SAST_SARIF_OUTPUT = os.getenv("HADOLINT_SAST_SARIF_OUTPUT", "<path_to_hadolint_sarif_output>")  # Default placeholder, should be overridden by env
+OPENGREP_SAST_SARIF_OUTPUT = os.getenv("OPENGREP_SAST_SARIF_OUTPUT", "container-sast-opengrep.sarif")
+HADOLINT_SAST_SARIF_OUTPUT = os.getenv("HADOLINT_SAST_SARIF_OUTPUT", "container-sast-hadolint.sarif")
 
 # --- Functions to run each SCA tool and handle their outputs
 def run_trivy():
@@ -45,6 +45,7 @@ def run_trivy():
     cmd = [
         "trivy", "image",
         IMAGE_NAME,
+        "-q",
         "--format", "sarif",
         "--ignorefile", TRIVY_IGNOREFILE,
         "--output", TRIVY_SCA_SARIF_OUTPUT,
@@ -134,7 +135,7 @@ def handle_sca():
 def run_hadolint():
     logger.info(f"{BOLD}[hadolint] Starting Dockerfile lint...{RESET}")
     cmd = [
-        "hadolint", "Dockerfile",
+        "hadolint", DOCKERFILE_PATH,
         "--failure-threshold", "error",
         "--format", "sarif",
     ]
@@ -192,6 +193,7 @@ def handle_sast():
         sys.exit(1)
 
 def merge_sarifs(sarif_paths, output_path):
+    logger.info(f"{BOLD}Merging SARIF files: {', '.join(sarif_paths)} into {output_path}{RESET}")
     merged = {
         "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json",
         "version": "2.1.0",
@@ -239,7 +241,7 @@ def main():
 
     parser.add_argument(
         "--merge-output",
-        default="merged-container-scan.sarif",
+        default="container-scan-merged.sarif",
         help="Output path for the merged SARIF file"
     )
     args = parser.parse_args()
@@ -261,3 +263,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

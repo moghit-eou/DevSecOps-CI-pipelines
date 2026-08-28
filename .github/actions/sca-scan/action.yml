@@ -1,0 +1,79 @@
+name: 'SCA Scan'
+description: 'Runs SBOM-based SCA scan (Trivy + OSV) and uploads results'
+inputs:
+  ecosystem:
+    description: 'SBOM ecosystem for setup-tools.sh. Use "auto" (default) for a generic Trivy filesystem scan.'
+    required: true
+    default: 'auto'
+  sbom_path:
+    description: 'Path to SBOM file (relative to repo root). Defaults to target/bom.json.'
+    required: false
+    default: 'target/bom.json'
+  python_version:
+    description: 'Python version to use for setup-tools.sh and sca_scan.py.'
+    required: false
+    default: '3.14.4'
+  scan_path:
+    description: 'Path to scan (relative to repo root). Defaults to repo root.'
+    required: true
+    default: '.'
+  trivy_ignorefile:
+    required: false
+    default: 'ci/suppress_trivy.yaml'
+  osv_ignorefile:
+    required: false
+    default: 'ci/suppress_osv_scanner.toml'
+  trivy_sarif_output:
+    required: false
+    default: 'sca-trivy.sarif'
+  osv_sarif_output:
+    required: false
+    default: 'sca-osv-scanner.sarif'
+  sca_merged_sarif_output:
+    required: false
+    default: 'sca-merged.sarif'
+  artifact_name:
+    required: false
+    default: 'sca-scan-sarif-report'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python_version }}
+
+    - name: Setup tools
+      shell: bash
+      run: |
+        bash ci/setup-tools.sh \
+          --install-tool trivy,osv-scanner \
+          --sbom-ecosystem ${{ inputs.ecosystem }} \
+          --scan-path ${{ inputs.scan_path }}
+
+    - name: Run SCA tools
+      shell: bash
+      run: python ci/sca_scan.py
+      env:
+        SBOM_PATH: ${{ inputs.sbom_path }}
+        TRIVY_IGNOREFILE: ${{ inputs.trivy_ignorefile }}
+        OSV_IGNOREFILE: ${{ inputs.osv_ignorefile }}
+        TRIVY_SARIF_OUTPUT: ${{ inputs.trivy_sarif_output }}
+        OSV_SARIF_OUTPUT: ${{ inputs.osv_sarif_output }}
+        SCAN_PATH: ${{ inputs.scan_path }}
+
+    - name: Upload merged SARIF to GitHub Security tab
+      if: always()
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: ${{ inputs.sca_merged_sarif_output }}
+        category: sca-app
+
+    - name: Upload SARIF artifacts
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: ${{ inputs.sca_merged_sarif_output }}
+        retention-days: 30

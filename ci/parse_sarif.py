@@ -37,3 +37,5 @@ def evaluate(sarif_paths):
             gate_failed=max_score >= 8,
             gate_warn=5 <= max_score < 8,
         )
+
+

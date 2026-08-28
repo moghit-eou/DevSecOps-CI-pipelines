@@ -21,9 +21,9 @@ logger = logging.getLogger("sca-orchestrator")
 SBOM_PATH = os.getenv("SBOM_PATH", "target/bom.json")
 TRIVY_IGNOREFILE = os.getenv("TRIVY_IGNOREFILE", "suppress_trivy.yaml")
 OSV_IGNOREFILE = os.getenv("OSV_IGNOREFILE", "suppress_osv_scanner.toml")
-TRIVY_SARIF_OUTPUT = os.getenv("TRIVY_SARIF_OUTPUT", "trivy-platform-backend.sarif")
-OSV_SARIF_OUTPUT = os.getenv("OSV_SARIF_OUTPUT", "osv-scanner-platform-backend.sarif")
-SCA_MERGED_SARIF_OUTPUT = os.getenv("SCA_MERGED_SARIF_OUTPUT", "SCA-platform-backend-merged.sarif")
+TRIVY_SARIF_OUTPUT = os.getenv("TRIVY_SARIF_OUTPUT", "sca-trivy.sarif")
+OSV_SARIF_OUTPUT = os.getenv("OSV_SARIF_OUTPUT", "sca-osv-scanner.sarif")
+SCA_MERGED_SARIF_OUTPUT = os.getenv("SCA_MERGED_SARIF_OUTPUT", "sca-merged.sarif")
 
 def run_trivy():
     logger.info(f"{BOLD}[trivy] Starting SBOM scan...{RESET}")
@@ -44,7 +44,8 @@ def run_osv_scanner():
         "--lockfile", SBOM_PATH,
         "--config", OSV_IGNOREFILE,
         "--format", "sarif",
-        "--output-file", OSV_SARIF_OUTPUT
+        "--output-file", OSV_SARIF_OUTPUT,
+        "--verbosity", "error"
     ]
     logger.info(f"{BOLD}Running: {' '.join(cmd)}{RESET}")
     exit_code = subprocess.run(cmd).returncode
@@ -133,3 +134,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
