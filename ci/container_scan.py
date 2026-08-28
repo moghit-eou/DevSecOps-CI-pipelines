@@ -21,6 +21,7 @@ logger = logging.getLogger("container-scan-orchestrator")
 
 # --- Configurable values
 IMAGE_NAME = os.getenv("IMAGE_NAME", "<image_name>")  # Default placeholder, should be overridden by CLI argument
+DOCKERFILE_PATH = os.environ.get("DOCKERFILE_PATH", "Dockerfile")
 
 # --- SCA / CVE (Trivy + OSV) ---
 TRIVY_IGNOREFILE = os.getenv("TRIVY_IGNOREFILE", "<path_to_trivy_ignorefile>")  # Default placeholder, should be overridden by env
@@ -134,7 +135,7 @@ def handle_sca():
 def run_hadolint():
     logger.info(f"{BOLD}[hadolint] Starting Dockerfile lint...{RESET}")
     cmd = [
-        "hadolint", "Dockerfile",
+        "hadolint", DOCKERFILE_PATH,
         "--failure-threshold", "error",
         "--format", "sarif",
     ]

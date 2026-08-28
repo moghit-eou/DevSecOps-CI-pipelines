@@ -72,6 +72,7 @@ runs:
       shell: bash
       run: python ci/container_scan.py --scan-type sast
       env:
+        DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
         SEMGREP_CONFIG_RULESETS: ${{ inputs.semgrep_config_rulesets }}
         OPENGREP_SAST_SARIF_OUTPUT: ${{ inputs.opengrep_sast_sarif_output }}
         HADOLINT_SAST_SARIF_OUTPUT: ${{ inputs.hadolint_sast_sarif_output }}
@@ -98,7 +99,7 @@ runs:
             exit 1
           fi
         done
-        
+
     - name: Merge all SARIF reports
       if: always()
       shell: bash
