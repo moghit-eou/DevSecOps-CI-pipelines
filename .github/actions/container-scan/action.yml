@@ -90,6 +90,7 @@ runs:
 
     - name: Merge all SARIF reports
       if: always()
+      shell: bash
       run: |
         python ci/container_scan.py \
           --merge-sarif "${{ env.TRIVY_SCA_SARIF_OUTPUT }}" "${{ env.OSV_SCA_SARIF_OUTPUT }}" "${{ env.OPENGREP_SAST_SARIF_OUTPUT }}" "${{ env.HADOLINT_SAST_SARIF_OUTPUT }}" \
