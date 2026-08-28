@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Run SCA scan
-        uses: ./.github/actions/sca-scan
+        uses: /.github/actions/sca-scan
         with:
           ecosystem: auto
           scan_path: ./test-python
