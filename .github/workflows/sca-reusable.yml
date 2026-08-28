@@ -1,0 +1,26 @@
+name: Software Composition Analysis (SCA)
+
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 1'
+
+jobs:
+  sca:
+    name: Software Composition Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      SCA_MERGED_SARIF_OUTPUT: report-SCA-merged.sarif
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Run SCA scan
+        uses: ./.github/actions/sca-scan
+        with:
+          ecosystem: auto
+          sca_merged_sarif_output: ${{ env.SCA_MERGED_SARIF_OUTPUT }}

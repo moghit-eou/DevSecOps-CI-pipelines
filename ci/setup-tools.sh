@@ -30,10 +30,6 @@ SEMGREP_RULES_DIR="semgrep-rules"
 HADOLINT_VERSION="${HADOLINT_VERSION:-v2.14.0}"
 HADOLINT_SHA256="${HADOLINT_SHA256:-6bf226944684f56c84dd014e8b979d27425c0148f61b3bd99bcc6f39e9dc5a47}"
 
-# renovate: datasource=github-release-attachments depName=anchore/syft
-SYFT_VERSION="${SYFT_VERSION:-v1.51.0}"
-SYFT_SHA256="${SYFT_SHA256:-2a2e837a2c8d59ec9af5472ee22d3b04ee463c4e44476ecf993fd1e5ab6ebc7f}"
-
 # renovate: datasource=npm depName=@cyclonedx/cyclonedx-npm
 CYCLONEDX_NPM_VERSION="${CYCLONEDX_NPM_VERSION:-6.0.0}"
 
@@ -134,19 +130,6 @@ if should_install "hadolint"; then
   hadolint --version
   echo "Hadolint installed OK"
 fi
-
-# --- Syft ----------------------------------------------------------------
-install_syft() {
-  echo "[setup-tools] Installing Syft ${SYFT_VERSION}"
-  SYFT_TARBALL="syft_${SYFT_VERSION#v}_linux_amd64.tar.gz"
-  download_and_verify \
-    "https://github.com/anchore/syft/releases/download/${SYFT_VERSION}/${SYFT_TARBALL}" \
-    "${TMP_DIR}/${SYFT_TARBALL}" \
-    "${SYFT_SHA256}"
-  sudo tar -xzf "${TMP_DIR}/${SYFT_TARBALL}" -C /usr/local/bin syft
-  syft --version
-  echo "Syft installed OK"
-}
 
 # --- SBOM generation ----------------------------------------------------
 case "$SBOM_ECOSYSTEM" in
