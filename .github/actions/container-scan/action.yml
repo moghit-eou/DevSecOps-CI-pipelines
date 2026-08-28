@@ -72,7 +72,7 @@ runs:
       shell: bash
       run: python ci/container_scan.py --scan-type sast
       env:
-        DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
+        DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}/Dockerfile
         SEMGREP_CONFIG_RULESETS: ${{ inputs.semgrep_config_rulesets }}
         OPENGREP_SAST_SARIF_OUTPUT: ${{ inputs.opengrep_sast_sarif_output }}
         HADOLINT_SAST_SARIF_OUTPUT: ${{ inputs.hadolint_sast_sarif_output }}
