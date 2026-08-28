@@ -192,6 +192,7 @@ def handle_sast():
         sys.exit(1)
 
 def merge_sarifs(sarif_paths, output_path):
+    logger.info(f"{BOLD}Merging SARIF files: {', '.join(sarif_paths)} into {output_path}{RESET}")
     merged = {
         "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json",
         "version": "2.1.0",
