@@ -1,24 +1,112 @@
-name: Container Vulnerability Scanning
+name: 'Container Vulnerability Scan'
+description: 'Builds a Docker image, runs SAST (dockerfile) + SCA (image) scanning, merges and uploads results'
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 2 * * 1'
+inputs:
+  dockerfile_path:
+    description: 'Path to the build context (directory containing the Dockerfile). Required.'
+    required: true
 
-jobs:
-  container-scan:
-    name: Container Vulnerability Scanning
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+  image_name:
+    description: 'Name/tag for the built image'
+    required: false
+    default: 'app:scan'
 
-      - name: Run container scan
-        uses: ./.github/actions/container-scan
-        with:
-          dockerfile_path: backend/
-          image_name: platform-backend:testing
-          container_scan_merged_sarif_output: container-scan-platform-backend-merged.sarif
+  python_version:
+    required: false
+    default: '3.14.4'
+
+  trivy_ignorefile:
+    required: false
+    default: 'ci/suppress_trivy.yaml'
+  osv_ignorefile:
+    required: false
+    default: 'ci/suppress_osv_scanner.toml'
+
+  trivy_sca_sarif_output:
+    required: false
+    default: 'sca-trivy.sarif'
+
+  osv_sca_sarif_output:
+    required: false
+    default: 'sca-osvScanner.sarif'
+
+  opengrep_sast_sarif_output:
+    required: false
+    default: 'sast-opengrep-dockerfile.sarif'
+
+  hadolint_sast_sarif_output:
+    required: false
+    default: 'sast-hadolint-dockerfile.sarif'
+
+  semgrep_config_rulesets:
+    required: false
+    default: 'semgrep-rules/dockerfile auto'
+
+  container_scan_merged_sarif_output:
+    required: false
+    default: 'container-scan-merged-report.sarif'
+
+  artifact_name:
+    required: false
+    default: 'container-scan-report'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
+      with:
+        python-version: ${{ inputs.python_version }}
+
+    - name: Build Docker image
+      shell: bash
+      run: docker build -t ${{ inputs.image_name }} ${{ inputs.dockerfile_path }}
+
+    - name: Setup tools
+      shell: bash
+      run: |
+        bash ci/setup-tools.sh \
+        --install-tool trivy,osv-scanner,opengrep,hadolint,semgrep-rules
+
+    - name: Run SAST scanning
+      shell: bash
+      run: python ci/container_scan.py --scan-type sast
+      env:
+        SEMGREP_CONFIG_RULESETS: ${{ inputs.semgrep_config_rulesets }}
+        OPENGREP_SAST_SARIF_OUTPUT: ${{ inputs.opengrep_sast_sarif_output }}
+        HADOLINT_SAST_SARIF_OUTPUT: ${{ inputs.hadolint_sast_sarif_output }}
+        TRIVY_IGNOREFILE: ${{ inputs.trivy_ignorefile }}
+        OSV_IGNOREFILE: ${{ inputs.osv_ignorefile }}
+
+    - name: Run SCA scanning
+      if: always()
+      shell: bash
+      run: python ci/container_scan.py --scan-type sca --image ${{ inputs.image_name }}
+      env:
+        TRIVY_IGNOREFILE: ${{ inputs.trivy_ignorefile }}
+        OSV_IGNOREFILE: ${{ inputs.osv_ignorefile }}
+        TRIVY_SCA_SARIF_OUTPUT: ${{ inputs.trivy_sca_sarif_output }}
+        OSV_SCA_SARIF_OUTPUT: ${{ inputs.osv_sca_sarif_output }}
+
+    - name: Merge all SARIF reports
+      if: always()
+      shell: bash
+      run: |
+        python ci/container_scan.py \
+          --merge-sarif "${{ inputs.trivy_sca_sarif_output }}" "${{ inputs.osv_sca_sarif_output }}" "${{ inputs.opengrep_sast_sarif_output }}" "${{ inputs.hadolint_sast_sarif_output }}" \
+          --merge-output "${{ inputs.container_scan_merged_sarif_output }}"
+
+    - name: Upload merged SARIF to GitHub Security tab
+      if: always()
+      uses: github/codeql-action/upload-sarif@c35d1b164463ee62a100735382aaaa525c5d3496 #v2.25.6
+      with:
+        sarif_file: ${{ inputs.container_scan_merged_sarif_output }}
+        category: container-scan
+
+    - name: Upload SARIF artifacts
+      if: always()
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: ${{ inputs.container_scan_merged_sarif_output }}
+        retention-days: 30
