@@ -1,7 +1,6 @@
 name: Container Vulnerability Scanning
 
 on:
-  pull_request:
   workflow_dispatch:
   schedule:
     - cron: '0 2 * * 1' # weekly scan, every Monday 02:00 UTC

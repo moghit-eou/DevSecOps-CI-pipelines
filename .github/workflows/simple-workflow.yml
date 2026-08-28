@@ -6,15 +6,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FIRST_STEP: "Dependency Installation"
+      SECOND_STEP: "Run Tests"
+      THIRD_STEP: "Build Project"
+
     steps:
       - name: Step 1
-        run: echo "Starting the workflow"
+        run: echo {{env.FIRST_STEP}}
 
       - name: Step 2
-        run: echo "Installing dependencies"
+        run: echo {{env.SECOND_STEP}} 
 
       - name: Step 3
-        run: echo "Running tests"
+        run: echo {{env.THIRD_STEP}}
 
       - name: Step 4
         run: echo "Build complete"
