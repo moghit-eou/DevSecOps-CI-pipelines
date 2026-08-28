@@ -44,6 +44,7 @@ def run_trivy():
     cmd = [
         "trivy", "image",
         IMAGE_NAME,
+        "-q",
         "--format", "sarif",
         "--ignorefile", TRIVY_IGNOREFILE,
         "--output", TRIVY_SCA_SARIF_OUTPUT,

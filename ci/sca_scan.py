@@ -44,7 +44,8 @@ def run_osv_scanner():
         "--lockfile", SBOM_PATH,
         "--config", OSV_IGNOREFILE,
         "--format", "sarif",
-        "--output-file", OSV_SARIF_OUTPUT
+        "--output-file", OSV_SARIF_OUTPUT,
+        "--verbosity", "error"
     ]
     logger.info(f"{BOLD}Running: {' '.join(cmd)}{RESET}")
     exit_code = subprocess.run(cmd).returncode
