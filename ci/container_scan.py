@@ -24,8 +24,8 @@ IMAGE_NAME = os.getenv("IMAGE_NAME", "<image_name>")  # Default placeholder, sho
 DOCKERFILE_PATH = os.environ.get("DOCKERFILE_PATH", "Dockerfile")
 
 # --- SCA / CVE (Trivy + OSV) ---
-TRIVY_IGNOREFILE = os.getenv("TRIVY_IGNOREFILE", "<path_to_trivy_ignorefile>")  # Default placeholder, should be overridden by env
-OSV_IGNOREFILE = os.getenv("OSV_IGNOREFILE", "<path_to_osv_ignorefile>")  # Default placeholder, should be overridden by env
+TRIVY_IGNOREFILE = os.getenv("TRIVY_IGNOREFILE", "suppress_trivy.yaml")
+OSV_IGNOREFILE = os.getenv("OSV_IGNOREFILE", "suppress_osv_scanner.toml")
 TRIVY_SCA_SARIF_OUTPUT = os.getenv("TRIVY_SCA_SARIF_OUTPUT", "container-sca-trivy.sarif")
 OSV_SCA_SARIF_OUTPUT = os.getenv("OSV_SCA_SARIF_OUTPUT", "container-sca-osv-scanner.sarif")
 
