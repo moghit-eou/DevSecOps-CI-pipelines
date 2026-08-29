@@ -145,11 +145,11 @@ case "$SBOM_ECOSYSTEM" in
     mvn -B -ntp org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom -q
     ;;
   npm)
-    echo "Generating SBOM for NPM project"
+    echo "Generating SBOM for NPM project ... this may take a while"
     npx --yes "@cyclonedx/cyclonedx-npm@${CYCLONEDX_NPM_VERSION}" --output-file target/bom.json
     ;;
   golang|go)
-    echo "Generating SBOM for Go project"
+    echo "Generating SBOM for Go project ... this may take a while"
     mkdir -p target
     go install "github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@${CYCLONEDX_GOMOD_VERSION}"
     "$(go env GOPATH)/bin/cyclonedx-gomod" mod -json -output target/bom.json
