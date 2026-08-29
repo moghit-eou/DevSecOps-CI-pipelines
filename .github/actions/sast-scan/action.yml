@@ -1,0 +1,33 @@
+name: "SAST Scan"
+description: "Runs OpenGrep + semgrep-rules against a project directory using the sast-toolbox image"
+
+inputs:
+  project:
+    description: "Path to the project directory to scan"
+    required: true
+  sarif-output:
+    description: "Path to write the SARIF output"
+    required: false
+    default: "sast-results.sarif"
+
+outputs:
+  sarif-path:
+    description: "Path to the generated SARIF file"
+    value: ${{ steps.scan.outputs.sarif-path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build sast-toolbox image
+      shell: bash
+      run: DOCKER_BUILDKIT=1 docker build --target sast-toolbox -t mip-toolbox:sast .
+
+    - name: Run SAST scan
+      id: scan
+      shell: bash
+      run: |
+        docker run --rm \
+          -v "${{ inputs.project }}:/workspace" \
+          -v "${{ github.workspace }}:/out" \
+          mip-toolbox:sast --output "/out/${{ inputs.sarif-output }}"
+        echo "sarif-path=${{ inputs.sarif-output }}" >> "$GITHUB_OUTPUT"
