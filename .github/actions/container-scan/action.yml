@@ -53,14 +53,40 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # Fail fast and clearly on the two edge cases that matter most here:
+    # a dockerfile_path that doesn't exist, and a directory that exists but
+    # has no file literally named "Dockerfile". Without this, `docker build`
+    # still fails, but with a less obvious message, and it does so *after*
+    # Python setup has already run. Also normalizes away a trailing slash so
+    # later steps' "$dir/Dockerfile" never becomes "$dir//Dockerfile".
+    - name: Validate Dockerfile path
+      shell: bash
+      run: |
+        dir="${{ inputs.dockerfile_path }}"
+        dir="${dir%/}"
+        if [[ -z "$dir" ]]; then
+          echo "::error::dockerfile_path is empty. Set it to the directory containing your Dockerfile." >&2
+          exit 1
+        fi
+        if [[ ! -d "$dir" ]]; then
+          echo "::error::dockerfile_path '$dir' does not exist or is not a directory." >&2
+          exit 1
+        fi
+        if [[ ! -f "$dir/Dockerfile" ]]; then
+          echo "::error::No file named 'Dockerfile' found in '$dir'." >&2
+          exit 1
+        fi
+        echo "dockerfile_dir=$dir" >> "$GITHUB_ENV"
+
     - name: Set up Python
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 #v6.2.0
       with:
         python-version: ${{ inputs.python_version }}
 
     - name: Build Docker image
+      id: build
       shell: bash
-      run: docker build -t ${{ inputs.image_name }} ${{ inputs.dockerfile_path }}
+      run: docker build -t "${{ inputs.image_name }}" "${{ env.dockerfile_dir }}"
 
     - name: Setup tools
       shell: bash
@@ -72,17 +98,26 @@ runs:
       shell: bash
       run: python ci/container_scan.py --scan-type sast
       env:
-        DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}/Dockerfile
+        DOCKERFILE_PATH: ${{ env.dockerfile_dir }}/Dockerfile
         SEMGREP_CONFIG_RULESETS: ${{ inputs.semgrep_config_rulesets }}
         OPENGREP_SAST_SARIF_OUTPUT: ${{ inputs.opengrep_sast_sarif_output }}
         HADOLINT_SAST_SARIF_OUTPUT: ${{ inputs.hadolint_sast_sarif_output }}
         TRIVY_IGNOREFILE: ${{ inputs.trivy_ignorefile }}
         OSV_IGNOREFILE: ${{ inputs.osv_ignorefile }}
 
+    # Gated on the build having actually succeeded (not just "always"): if
+    # dockerfile_path was wrong, the "Validate" step above already stopped
+    # the run; if the build fails for some other reason (bad Dockerfile
+    # syntax, base-image pull failure, ...), there's no image to scan, so
+    # scanning would just fail again with a confusing secondary error and a
+    # near-empty merged SARIF would still get uploaded, masking the real
+    # failure. `!cancelled()` (rather than `always()`) still lets this run
+    # when the SAST step above failed its gate, since that's a legitimate
+    # partial-results case, not a "nothing to scan" case.
     - name: Run SCA scanning
-      if: always()
+      if: ${{ !cancelled() && steps.build.outcome == 'success' }}
       shell: bash
-      run: python ci/container_scan.py --scan-type sca --image ${{ inputs.image_name }}
+      run: python ci/container_scan.py --scan-type sca --image "${{ inputs.image_name }}"
       env:
         TRIVY_IGNOREFILE: ${{ inputs.trivy_ignorefile }}
         OSV_IGNOREFILE: ${{ inputs.osv_ignorefile }}
@@ -90,7 +125,7 @@ runs:
         OSV_SCA_SARIF_OUTPUT: ${{ inputs.osv_sca_sarif_output }}
 
     - name: Merge all SARIF reports
-      if: always()
+      if: ${{ !cancelled() && steps.build.outcome == 'success' }}
       shell: bash
       run: |
         python ci/container_scan.py \
@@ -102,20 +137,21 @@ runs:
         OPENGREP_SAST_SARIF_OUTPUT: ${{ inputs.opengrep_sast_sarif_output }}
         HADOLINT_SAST_SARIF_OUTPUT: ${{ inputs.hadolint_sast_sarif_output }}
         CONTAINER_SCAN_MERGED_SARIF_OUTPUT: ${{ inputs.container_scan_merged_sarif_output }}
-      
 
     - name: Upload merged SARIF to GitHub Security tab
-      if: always()
-      uses: github/codeql-action/upload-sarif@c35d1b164463ee62a100735382aaaa525c5d3496 #v2.25.6
+      if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: ${{ inputs.container_scan_merged_sarif_output }}
-        category: container-scan
+        # Per-dockerfile_path category so two callers scanning different
+        # Dockerfiles in the same repo don't overwrite each other's
+        # Security-tab findings.
+        category: container-scan-${{ inputs.dockerfile_path }}
 
     - name: Upload SARIF artifacts
-      if: always()
+      if: ${{ !cancelled() && steps.build.outcome == 'success' }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
       with:
         name: ${{ inputs.artifact_name }}
         path: ${{ inputs.container_scan_merged_sarif_output }}
         retention-days: 30
-

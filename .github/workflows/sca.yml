@@ -7,14 +7,12 @@ on:
     - cron: '0 2 * * 1'
 
 jobs:
-  sca:
-    name: Software Composition Analysis
+  sca-python:
+    name: SCA (test-python, generic)
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
-    env:
-      SCA_MERGED_SARIF_OUTPUT: report-SCA-merged.sarif
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -22,6 +20,33 @@ jobs:
       - name: Run SCA scan
         uses: ./.github/actions/sca-scan
         with:
-          ecosystem: auto
+          # Mandatory: path to scan, relative to repo root.
           scan_path: ./test-python
-          sca_merged_sarif_output: ${{ env.SCA_MERGED_SARIF_OUTPUT }}
+          # Mandatory: maven | npm | golang | generic.
+          # test-python has no CycloneDX-native ecosystem here, so it gets
+          # a generic Trivy filesystem SBOM.
+          ecosystem: generic
+
+  sca-maven:
+    name: SCA (test-mip-maven, maven)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Run SCA scan
+        uses: ./.github/actions/sca-scan
+        with:
+          scan_path: ./test-mip-maven
+          ecosystem: maven
+          # Optional: override the merged SARIF filename so this job's
+          # artifact (and its Security-tab category, derived from scan_path)
+          # never collides with the sca-python job above.
+          sca_merged_sarif_output: report-sca-maven-merged.sarif
+
+# Onboarding a third project (e.g. an npm or Go service) is just a third
+# job with its own scan_path/ecosystem `with:` block -- nothing under ci/
+# or in this action needs to change.
