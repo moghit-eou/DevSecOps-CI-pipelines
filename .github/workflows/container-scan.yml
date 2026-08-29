@@ -22,5 +22,5 @@ jobs:
         with:
           # Mandatory: directory containing the Dockerfile to build & scan.
           dockerfile_path: ./test-mip-maven
-          # Optional: tag for the built image.
+          # Optional: tag for the built image. 
           image_name: test-mip-maven:scan
