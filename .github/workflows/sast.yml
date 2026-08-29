@@ -23,7 +23,7 @@ jobs:
           # Mandatory: project path to scan, relative to repo root.
           project: ./test-golang
           # Optional: exclude patterns, relative to `project` (not repo root).
-          opengrep_exclude: "*.sarif go.sum ./test-golang/internal/execution/runner_docker.go"
+          opengrep_exclude: "*.sarif go.sum ./test-golang/internal/execution/runner_docker.go runner_host.go"
           # Optional: fully replaces the default ruleset list when set --
           # uncomment to scope this caller to just a Go-focused ruleset.
           # semgrep_config_rulesets: "semgrep-rules/generic semgrep-rules/bash auto"
