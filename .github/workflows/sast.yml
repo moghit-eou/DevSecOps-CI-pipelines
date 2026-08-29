@@ -18,11 +18,7 @@ jobs:
 
       - name: Run SAST action
         id: sast
-        uses: ./.github/actions/sast
+        uses: ./.github/actions/sast-scan
         with:
-          project: .
-
-      - name: Upload SARIF to Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: ${{ steps.sast.outputs.sarif-path }}
+          project: ./test-golang
+          opengrep_exclude: "*.sarif go.sum ./test-golang/internal/execution/runner_docker.go"

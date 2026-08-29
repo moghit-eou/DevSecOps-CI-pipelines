@@ -1,33 +1,75 @@
 name: "SAST Scan"
-description: "Runs OpenGrep + semgrep-rules against a project directory using the sast-toolbox image"
+description: "Runs OpenGrep + semgrep-rules against a project directory"
 
 inputs:
   project:
-    description: "Path to the project directory to scan"
+    description: "Path to the directory to scan, relative to repo root (e.g. '.', 'test-golang')."
     required: true
-  sarif-output:
-    description: "Path to write the SARIF output"
+    default: "."
+  python_version:
+    required: false
+    default: "3.14.4"
+  semgrep_config_rulesets:
+    description: >-
+      Space-separated OpenGrep/semgrep --config rulesets, relative to where
+      semgrep-rules is cloned (repo root). Non "semgrep-rules/*" entries
+      (e.g. "auto", "p/default") are passed through untouched. Overridable by the caller.
+    required: false
+    default: >-
+      semgrep-rules/generic
+      semgrep-rules/problem-based-packs
+      semgrep-rules/bash
+      semgrep-rules/java
+      auto
+      semgrep-rules/yaml
+      semgrep-rules/package_managers
+      p/default
+  opengrep_exclude:
+    description: "Space-separated exclude patterns, relative to `project`. Overridable by the caller."
+    required: false
+    default: "*.sarif"
+  sarif_output:
+    description: "SARIF filename, written inside `project`."
     required: false
     default: "sast-results.sarif"
-
-outputs:
-  sarif-path:
-    description: "Path to the generated SARIF file"
-    value: ${{ steps.scan.outputs.sarif-path }}
+  artifact_name:
+    required: false
+    default: "sast-scan-sarif-report"
 
 runs:
   using: "composite"
   steps:
-    - name: Build sast-toolbox image
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python_version }}
+
+    - name: Setup tools
       shell: bash
-      run: DOCKER_BUILDKIT=1 docker build --target sast-toolbox -t mip-toolbox:sast .
+      run: bash ci/setup-tools.sh --install-tool opengrep,semgrep-rules
 
     - name: Run SAST scan
-      id: scan
       shell: bash
+      working-directory: ${{ inputs.project }}
       run: |
-        docker run --rm \
-          -v "${{ inputs.project }}:/workspace" \
-          -v "${{ github.workspace }}:/out" \
-          mip-toolbox:sast --output "/out/${{ inputs.sarif-output }}"
-        echo "sarif-path=${{ inputs.sarif-output }}" >> "$GITHUB_OUTPUT"
+        raw="${{ inputs.semgrep_config_rulesets }}"
+        export SEMGREP_CONFIG_RULESETS="${raw//semgrep-rules\//$GITHUB_WORKSPACE/semgrep-rules/}"
+        python "${GITHUB_WORKSPACE}/ci/sast_scan.py"
+      env:
+        OPENGREP_EXCLUDE: ${{ inputs.opengrep_exclude }}
+        OPENGREP_SARIF_OUTPUT: ${{ inputs.sarif_output }}
+
+    - name: Upload SARIF to GitHub Security tab
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.project }}/${{ inputs.sarif_output }}
+        category: sast-${{ inputs.project }}
+
+    - name: Upload SARIF artifact
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: ${{ inputs.project }}/${{ inputs.sarif_output }}
+        retention-days: 30
