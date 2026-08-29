@@ -4,7 +4,7 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: "0 2 * * 1"   # weekly, Monday 02:00 UTC
+    - cron: '0 2 * * 1'
 
 permissions:
   contents: read
@@ -12,18 +12,55 @@ permissions:
 
 jobs:
   sast:
+    name: SAST (test-golang)
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    env:
+      PROJECT: ./test-golang
+      OPENGREP_SARIF_OUTPUT: sast-opengrep.sarif
+      OPENGREP_EXCLUDE: "*.sarif go.sum internal/execution/runner_docker.go"
+      SARIF_CATEGORY: sast-test-golang
+      ARTIFACT_NAME: sast-report-test-golang
 
-      - name: Run SAST action
-        id: sast
-        uses: ./.github/actions/sast-scan
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          # Mandatory: project path to scan, relative to repo root.
-          project: ./test-golang
-          # Optional: exclude patterns, relative to `project` (not repo root).
-          opengrep_exclude: "*.sarif go.sum ./test-golang/internal/execution/runner_docker.go runner_host.go"
-          # Optional: fully replaces the default ruleset list when set --
-          # uncomment to scope this caller to just a Go-focused ruleset.
-          # semgrep_config_rulesets: "semgrep-rules/generic semgrep-rules/bash auto"
+          # renovate: datasource=python-version depName=python
+          python-version: '3.14.4'
+
+      # Rules are cloned outside the checkout: semgrep's community rules ships many of  deliberately-vulnerable fixtures,
+      - name: Install scanner and rules
+        run: |
+          mkdir -p "$RUNNER_TEMP/tools" && cd "$RUNNER_TEMP/tools"
+          bash "$GITHUB_WORKSPACE/ci/setup-tools.sh" --install-tool opengrep,semgrep-rules
+
+      - name: Run SAST scan
+        working-directory: ${{ env.PROJECT }}
+        env:
+          # Step-level, not job-level,using absolute path
+          SEMGREP_CONFIG_RULESETS: >-
+            ${{ runner.temp }}/tools/semgrep-rules/generic
+            ${{ runner.temp }}/tools/semgrep-rules/problem-based-packs
+            ${{ runner.temp }}/tools/semgrep-rules/bash
+            ${{ runner.temp }}/tools/semgrep-rules/yaml
+            ${{ runner.temp }}/tools/semgrep-rules/package_managers
+            p/default auto
+        run: python3 "$GITHUB_WORKSPACE/ci/sast_scan.py"
+
+      - name: Upload SARIF to GitHub Security tab
+        if: ${{ !cancelled() && hashFiles(format('{0}/{1}', env.PROJECT, env.OPENGREP_SARIF_OUTPUT)) != '' }}
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb # v4.31.2
+        with:
+          sarif_file: ${{ env.PROJECT }}/${{ env.OPENGREP_SARIF_OUTPUT }}
+          category: ${{ env.SARIF_CATEGORY }}
+
+      - name: Upload SARIF artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.PROJECT }}/*.sarif
+          retention-days: 30
+          if-no-files-found: warn

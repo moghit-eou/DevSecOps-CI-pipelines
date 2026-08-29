@@ -146,6 +146,9 @@ case "$SBOM_ECOSYSTEM" in
     ;;
   npm)
     echo "Generating SBOM for NPM project ... this may take a while"
+    # cyclonedx-npm reads the installed dependency tree, so resolve first
+    # the mirror image of `mvn dependency:resolve` in the maven branch above.
+    npm ci
     npx --yes "@cyclonedx/cyclonedx-npm@${CYCLONEDX_NPM_VERSION}" --output-file target/bom.json
     ;;
   golang|go)

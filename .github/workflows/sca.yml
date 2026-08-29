@@ -6,47 +6,209 @@ on:
   schedule:
     - cron: '0 2 * * 1'
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
-  sca-python:
+  # ===== Test case: Maven ==================================================
+  sca-maven:
+    name: SCA (test-maven, maven)
+    runs-on: ubuntu-latest
+    env:
+      # --- what to scan ---
+      PROJECT: ./test-maven
+      ECOSYSTEM: maven
+
+      # --- gate thresholds (CVSS) ---
+      GATE_FAIL_THRESHOLD: "8.0"
+      GATE_WARN_THRESHOLD: "5.0"
+
+      # --- suppressions ---
+      TRIVY_IGNOREFILE: ${{ github.workspace }}/ci/suppress_trivy.yaml
+      OSV_IGNOREFILE: ${{ github.workspace }}/ci/suppress_osv_scanner.toml
+
+      # --- outputs, relative to PROJECT ---
+      SBOM_PATH: target/bom.json
+      TRIVY_SARIF_OUTPUT: sca-trivy.sarif
+      OSV_SARIF_OUTPUT: sca-osv-scanner.sarif
+      SCA_MERGED_SARIF_OUTPUT: sca-merged.sarif
+
+      # --- must be unique per job ---
+      SARIF_CATEGORY: sca-test-maven
+      ARTIFACT_NAME: sca-report-test-maven
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          # renovate: datasource=python-version depName=python
+          python-version: '3.14.4'
+
+      - name: Cache Maven packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.m2/repository # ~/.m2 is too broad and can corrupt the cache
+          key: ${{ runner.os }}-m2-v1-${{ hashFiles(format('{0}/**/pom.xml', env.PROJECT)) }}
+          restore-keys: ${{ runner.os }}-m2-v1-
+
+      # cd into PROJECT: setup-tools.sh writes the SBOM to the current directory.
+      - name: Install scanners and generate SBOM
+        working-directory: ${{ env.PROJECT }}
+        run: |
+          bash "$GITHUB_WORKSPACE/ci/setup-tools.sh" \
+            --install-tool trivy,osv-scanner \
+            --sbom-ecosystem "$ECOSYSTEM" \
+
+      - name: Run SCA scan
+        working-directory: ${{ env.PROJECT }}
+        run: python3 "$GITHUB_WORKSPACE/ci/sca_scan.py"
+
+      # Gated on the SARIF existing, not on the scan passing: a failed gate is
+      # exactly when the findings need publishing.
+      - name: Upload SARIF to GitHub Security tab
+        if: ${{ !cancelled() && hashFiles(format('{0}/{1}', env.PROJECT, env.SCA_MERGED_SARIF_OUTPUT)) != '' }}
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb # v4.31.2
+        with:
+          sarif_file: ${{ env.PROJECT }}/${{ env.SCA_MERGED_SARIF_OUTPUT }}
+          category: ${{ env.SARIF_CATEGORY }}
+
+      - name: Upload SARIF artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.PROJECT }}/*.sarif
+          retention-days: 30
+          if-no-files-found: warn
+
+  # ===== Test case: generic (any language, no package manager) =============
+  sca-generic:
     name: SCA (test-python, generic)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
+    env:
+      # --- what to scan ---
+      PROJECT: ./test-python
+      ECOSYSTEM: generic
+
+      # --- gate thresholds (CVSS) ---
+      GATE_FAIL_THRESHOLD: "9.5"
+      GATE_WARN_THRESHOLD: "5.0"
+
+      # --- suppressions ---
+      TRIVY_IGNOREFILE: ${{ github.workspace }}/ci/suppress_trivy.yaml
+      OSV_IGNOREFILE: ${{ github.workspace }}/ci/suppress_osv_scanner.toml
+
+      # --- outputs, relative to PROJECT ---
+      SBOM_PATH: target/bom.json
+      TRIVY_SARIF_OUTPUT: sca-trivy.sarif
+      OSV_SARIF_OUTPUT: sca-osv-scanner.sarif
+      SCA_MERGED_SARIF_OUTPUT: sca-merged.sarif
+
+      # --- must be unique per job ---
+      SARIF_CATEGORY: sca-test-python
+      ARTIFACT_NAME: sca-report-test-python
+
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.14.4'
+
+      # No dependency cache: `generic` is a Trivy filesystem scan, nothing is resolved.
+      - name: Install scanners and generate SBOM
+        working-directory: ${{ env.PROJECT }}
+        run: |
+          bash "$GITHUB_WORKSPACE/ci/setup-tools.sh" \
+            --install-tool trivy,osv-scanner \
+            --sbom-ecosystem "$ECOSYSTEM" \
 
       - name: Run SCA scan
-        uses: ./.github/actions/sca-scan
-        with:
-          # Mandatory: path to scan, relative to repo root.
-          scan_path: ./test-python
-          # Mandatory: maven | npm | golang | generic.
-          # test-python has no CycloneDX-native ecosystem here, so it gets
-          # a generic Trivy filesystem SBOM.
-          ecosystem: generic
+        working-directory: ${{ env.PROJECT }}
+        run: python3 "$GITHUB_WORKSPACE/ci/sca_scan.py"
 
-  sca-maven:
-    name: SCA (test-mip-maven, maven)
+      - name: Upload SARIF to GitHub Security tab
+        if: ${{ !cancelled() && hashFiles(format('{0}/{1}', env.PROJECT, env.SCA_MERGED_SARIF_OUTPUT)) != '' }}
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb # v4.31.2
+        with:
+          sarif_file: ${{ env.PROJECT }}/${{ env.SCA_MERGED_SARIF_OUTPUT }}
+          category: ${{ env.SARIF_CATEGORY }}
+
+      - name: Upload SARIF artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.PROJECT }}/*.sarif
+          retention-days: 30
+          if-no-files-found: warn
+
+  # ===== Test case: npm ====================================================
+  sca-npm:
+    name: SCA (test-npm)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
+    env:
+      # --- what to scan ---
+      PROJECT: ./test-npm
+      ECOSYSTEM: npm
+
+      # --- gate thresholds (CVSS) ---
+      GATE_FAIL_THRESHOLD: "8.0"
+      GATE_WARN_THRESHOLD: "5.0"
+
+      # --- suppressions ---
+      TRIVY_IGNOREFILE: ${{ github.workspace }}/ci/suppress_trivy.yaml
+      OSV_IGNOREFILE: ${{ github.workspace }}/ci/suppress_osv_scanner.toml
+
+      # --- outputs, relative to PROJECT ---
+      SBOM_PATH: target/bom.json
+      TRIVY_SARIF_OUTPUT: sca-trivy.sarif
+      OSV_SARIF_OUTPUT: sca-osv-scanner.sarif
+      SCA_MERGED_SARIF_OUTPUT: sca-merged.sarif
+
+      # --- must be unique per job ---
+      SARIF_CATEGORY: sca-test-npm
+      ARTIFACT_NAME: sca-report-test-npm
+
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.14.4'
+
+      - name: Cache npm packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-v1-${{ hashFiles(format('{0}/**/package-lock.json', env.PROJECT)) }}
+          restore-keys: ${{ runner.os }}-npm-v1-
+
+      - name: Install scanners and generate SBOM
+        working-directory: ${{ env.PROJECT }}
+        run: |
+          bash "$GITHUB_WORKSPACE/ci/setup-tools.sh" \
+            --install-tool trivy,osv-scanner \
+            --sbom-ecosystem "$ECOSYSTEM" \
 
       - name: Run SCA scan
-        uses: ./.github/actions/sca-scan
-        with:
-          scan_path: ./test-mip-maven
-          ecosystem: maven
-          # Optional: override the merged SARIF filename so this job's
-          # artifact (and its Security-tab category, derived from scan_path)
-          # never collides with the sca-python job above.
-          sca_merged_sarif_output: report-sca-maven-merged.sarif
+        working-directory: ${{ env.PROJECT }}
+        run: python3 "$GITHUB_WORKSPACE/ci/sca_scan.py"
 
-# Onboarding a third project (e.g. an npm or Go service) is just a third
-# job with its own scan_path/ecosystem `with:` block -- nothing under ci/
-# or in this action needs to change.
+      - name: Upload SARIF to GitHub Security tab
+        if: ${{ !cancelled() && hashFiles(format('{0}/{1}', env.PROJECT, env.SCA_MERGED_SARIF_OUTPUT)) != '' }}
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb # v4.31.2
+        with:
+          sarif_file: ${{ env.PROJECT }}/${{ env.SCA_MERGED_SARIF_OUTPUT }}
+          category: ${{ env.SARIF_CATEGORY }}
+
+      - name: Upload SARIF artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.PROJECT }}/*.sarif
+          retention-days: 30
+          if-no-files-found: warn
