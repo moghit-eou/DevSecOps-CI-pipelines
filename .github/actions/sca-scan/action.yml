@@ -107,7 +107,7 @@ runs:
 
     - name: Upload merged SARIF to GitHub Security tab
       if: always()
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: ${{ inputs.scan_path }}/${{ inputs.sca_merged_sarif_output }}
         category: sca-${{ inputs.scan_path }}

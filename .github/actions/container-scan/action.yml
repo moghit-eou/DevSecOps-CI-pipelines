@@ -140,7 +140,7 @@ runs:
 
     - name: Upload merged SARIF to GitHub Security tab
       if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-      uses: github/codeql-action/upload-sarif@c35d1b164463ee62a100735382aaaa525c5d3496 #v2.25.6
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: ${{ inputs.container_scan_merged_sarif_output }}
         # Per-dockerfile_path category so two callers scanning different
