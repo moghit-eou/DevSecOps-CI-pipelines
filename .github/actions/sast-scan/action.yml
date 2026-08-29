@@ -1,11 +1,10 @@
 name: "SAST Scan"
-description: "Runs OpenGrep + semgrep-rules against a project directory"
+description: "Runs OpenGrep + semgrep-rules against a project directory. Caller sets `project` via `with:`; ruleset and exclude-pattern inputs are optional overrides."
 
 inputs:
   project:
-    description: "Path to the directory to scan, relative to repo root (e.g. '.', 'test-golang')."
+    description: "Path to the directory to scan, relative to repo root (e.g. '.', 'test-golang'). Required."
     required: true
-    default: "."
   python_version:
     required: false
     default: "3.14.4"
@@ -13,7 +12,9 @@ inputs:
     description: >-
       Space-separated OpenGrep/semgrep --config rulesets, relative to where
       semgrep-rules is cloned (repo root). Non "semgrep-rules/*" entries
-      (e.g. "auto", "p/default") are passed through untouched. Overridable by the caller.
+      (e.g. "auto", "p/default") are passed through untouched. Setting this
+      input fully replaces the default list below -- it does not merge
+      with it.
     required: false
     default: >-
       semgrep-rules/generic
@@ -25,7 +26,7 @@ inputs:
       semgrep-rules/package_managers
       p/default
   opengrep_exclude:
-    description: "Space-separated exclude patterns, relative to `project`. Overridable by the caller."
+    description: "Space-separated exclude patterns, relative to `project` (not repo root)."
     required: false
     default: "*.sarif"
   sarif_output:
@@ -39,15 +40,31 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Validate project path
+      shell: bash
+      run: |
+        if [[ ! -d "${{ inputs.project }}" ]]; then
+          echo "::error::project '${{ inputs.project }}' does not exist or is not a directory." >&2
+          exit 1
+        fi
+
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
         python-version: ${{ inputs.python_version }}
 
+    # semgrep-rules is cloned at repo root (not into `project`), so this
+    # runs before the cd below, at the default (repo root) cwd.
     - name: Setup tools
       shell: bash
       run: bash ci/setup-tools.sh --install-tool opengrep,semgrep-rules
 
+    # sast_scan.py takes no path argument -- it always scans its cwd -- so
+    # this step cd's into `project`. Anything that lives at repo root
+    # regardless of which project is scanned (the script itself, the
+    # cloned semgrep-rules) is referenced via the absolute $GITHUB_WORKSPACE
+    # path so it still resolves after the cd. opengrep_exclude patterns are
+    # left relative (to `project`), per their contract.
     - name: Run SAST scan
       shell: bash
       working-directory: ${{ inputs.project }}
