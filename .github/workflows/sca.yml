@@ -212,3 +212,75 @@ jobs:
           path: ${{ env.PROJECT }}/*.sarif
           retention-days: 30
           if-no-files-found: warn
+
+  # ===== Test case: Rust (generic — no CycloneDX generator wired up) ========
+  sca-rust:
+    name: SCA (test-rust, generic)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      # --- what to scan ---
+      PROJECT: ./test-rust
+      ECOSYSTEM: generic
+
+      # --- gate thresholds (CVSS) ---
+      GATE_FAIL_THRESHOLD: "8.0"
+      GATE_WARN_THRESHOLD: "5.0"
+
+      # --- suppressions ---
+      TRIVY_IGNOREFILE: ${{ github.workspace }}/ci/suppress_trivy.yaml
+      OSV_IGNOREFILE: ${{ github.workspace }}/ci/suppress_osv_scanner.toml
+
+      # --- outputs, relative to PROJECT ---
+      SBOM_PATH: target/bom.json
+      TRIVY_SARIF_OUTPUT: sca-trivy.sarif
+      OSV_SARIF_OUTPUT: sca-osv-scanner.sarif
+      SCA_MERGED_SARIF_OUTPUT: sca-merged.sarif
+
+      # --- must be unique per job ---
+      SARIF_CATEGORY: sca-test-rust
+      ARTIFACT_NAME: sca-report-test-rust
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          # renovate: datasource=python-version depName=python
+          python-version: '3.14.4'
+
+      # No Rust toolchain and no dependency cache: `generic` is a Trivy
+      # filesystem scan that reads Cargo.lock directly, nothing is built.
+
+      - name: Install scanners and generate SBOM
+        working-directory: ${{ env.PROJECT }}
+        run: |
+          bash "$GITHUB_WORKSPACE/ci/setup-tools.sh" \
+            --install-tool trivy,osv-scanner \
+            --sbom-ecosystem "$ECOSYSTEM"
+
+      - name: Run SCA scan
+        working-directory: ${{ env.PROJECT }}
+        run: python3 "$GITHUB_WORKSPACE/ci/sca_scan.py"
+
+      # Gated on the SARIF existing, not on the scan passing: a failed gate is
+      # exactly when the findings need publishing.
+      - name: Upload SARIF to GitHub Security tab
+        if: ${{ !cancelled() && hashFiles(format('{0}/{1}', env.PROJECT, env.SCA_MERGED_SARIF_OUTPUT)) != '' }}
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb # v4.31.2
+        with:
+          sarif_file: ${{ env.PROJECT }}/${{ env.SCA_MERGED_SARIF_OUTPUT }}
+          category: ${{ env.SARIF_CATEGORY }}
+
+      - name: Upload SARIF artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.PROJECT }}/*.sarif
+          retention-days: 30
+          if-no-files-found: warn
