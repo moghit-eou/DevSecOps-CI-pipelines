@@ -6,21 +6,94 @@ on:
   schedule:
     - cron: '0 2 * * 1'
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   container-scan:
-    name: Container Vulnerability Scanning
+    name: Container scan (test-maven)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+    env:
+      PROJECT: ./test-maven
+      IMAGE_NAME: test-maven:scan
+      DOCKERFILE_PATH: Dockerfile # relative to PROJECT; the scan steps run there
 
-      - name: Run container scan
-        uses: ./.github/actions/container-scan
+      GATE_FAIL_THRESHOLD: "9.5"
+      GATE_WARN_THRESHOLD: "5.0"
+
+      TRIVY_IGNOREFILE: ${{ github.workspace }}/ci/suppress_trivy.yaml
+      OSV_IGNOREFILE: ${{ github.workspace }}/ci/suppress_osv_scanner.toml
+
+      SEMGREP_CONFIG_RULESETS: >-
+        semgrep-rules/dockerfile auto
+
+      TRIVY_SCA_SARIF_OUTPUT: container-sca-trivy.sarif
+      OSV_SCA_SARIF_OUTPUT: container-sca-osv-scanner.sarif
+      OPENGREP_SAST_SARIF_OUTPUT: container-sast-opengrep.sarif
+      HADOLINT_SAST_SARIF_OUTPUT: container-sast-hadolint.sarif
+      MERGED_SARIF_OUTPUT: container-scan-merged.sarif
+
+      SARIF_CATEGORY: container-scan-test-maven
+      ARTIFACT_NAME: container-scan-report-test-maven
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          # Mandatory: directory containing the Dockerfile to build & scan.
-          dockerfile_path: ./test-mip-maven
-          # Optional: tag for the built image. 
-          image_name: test-mip-maven:scan
+          # renovate: datasource=python-version depName=python
+          python-version: '3.14.4'
+
+      - name: Build Docker image
+        id: build
+        working-directory: ${{ env.PROJECT }}
+        run: docker build -t "$IMAGE_NAME" .
+
+      - name: Install scanners and rules
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/tools" && cd "$RUNNER_TEMP/tools"
+          bash "$GITHUB_WORKSPACE/ci/setup-tools.sh" \
+            --install-tool trivy,osv-scanner,opengrep,hadolint,semgrep-rules
+
+      # Runs inside PROJECT: container_scan.py lints with --include=Dockerfile
+      # against the current directory, so at the repo root it would lint every Dockerfile in the repository.
+      - name: Lint Dockerfile (Hadolint + OpenGrep)
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        working-directory: ${{ env.PROJECT }}
+        env:
+          SEMGREP_CONFIG_RULESETS: ${{ runner.temp }}/tools/semgrep-rules/dockerfile auto
+        run: python3 "$GITHUB_WORKSPACE/ci/container_scan.py" --scan-type sast
+
+      # Needs the image, so this one really is gated on the build.
+      - name: Scan image for CVEs (Trivy + OSV-Scanner)
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        working-directory: ${{ env.PROJECT }}
+        run: python3 "$GITHUB_WORKSPACE/ci/container_scan.py" --scan-type sca --image "$IMAGE_NAME"
+
+      # Merges whatever SARIFs exist; missing ones are skipped with a warning.
+      - name: Merge SARIF reports
+        if: ${{ !cancelled() }}
+        working-directory: ${{ env.PROJECT }}
+        run: |
+          python3 "$GITHUB_WORKSPACE/ci/container_scan.py" \
+            --merge-sarif "$TRIVY_SCA_SARIF_OUTPUT" "$OSV_SCA_SARIF_OUTPUT" \
+                          "$OPENGREP_SAST_SARIF_OUTPUT" "$HADOLINT_SAST_SARIF_OUTPUT" \
+            --merge-output "$MERGED_SARIF_OUTPUT"
+
+      - name: Upload SARIF to GitHub Security tab
+        if: ${{ !cancelled() && hashFiles(format('{0}/{1}', env.PROJECT, env.MERGED_SARIF_OUTPUT)) != '' }}
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb # v4.31.2
+        with:
+          sarif_file: ${{ env.PROJECT }}/${{ env.MERGED_SARIF_OUTPUT }}
+          category: ${{ env.SARIF_CATEGORY }}
+
+      - name: Upload SARIF artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.PROJECT }}/*.sarif
+          retention-days: 30
+          if-no-files-found: warn

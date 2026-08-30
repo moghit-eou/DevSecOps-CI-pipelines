@@ -3,10 +3,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <name>platform-backend</name>
-    <description>Medical Informatics Platform - platform-backend</description>
-    <groupId>hbp.mip</groupId>
-    <artifactId>platform-backend</artifactId>
+    <name>Test-organization</name>
+    <description>Test-organization</description>
+    <groupId>abc.abc</groupId>
+    <artifactId>Test-organization</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
@@ -147,7 +147,7 @@
     </dependencies>
 
    <build>
-       <finalName>platform-backend</finalName>
+       <finalName>Test-organization</finalName>
        <resources>
            <resource>
                <directory>src/main/resources</directory>

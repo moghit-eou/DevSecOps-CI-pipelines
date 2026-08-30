@@ -1,22 +1,4 @@
 {
-  "name": "fl-platform",
-  "version": "0.0.0",
-  "scripts": {
-    "ng": "ng",
-    "prestart": "node scripts/check-node-version.mjs",
-    "start": "ng serve",
-    "prebuild": "node scripts/check-node-version.mjs",
-    "build": "ng build",
-    "prewatch": "node scripts/check-node-version.mjs",
-    "watch": "ng build --watch --configuration development",
-    "pretest": "node scripts/check-node-version.mjs",
-    "test": "ng test"
-  },
-  "private": true,
-  "engines": {
-    "node": "^22.22.3 || ^24.15.0 || >=26.0.0",
-    "npm": ">=10.0.0"
-  },
   "dependencies": {
     "@angular/cdk": "^22.0.5",
     "@angular/common": "^22.0.7",
@@ -51,6 +33,11 @@
     "karma-jasmine-html-reporter": "~2.2.0",
     "typescript": "~6.0.3"
   },
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0",
+    "npm": ">=10.0.0"
+  },
+  "name": "fl-platform",
   "overrides": {
     "@babel/core": "7.29.7",
     "@hono/node-server": "2.0.12",
@@ -61,14 +48,15 @@
     },
     "fast-uri": "3.1.5",
     "http-proxy-middleware": "3.0.7",
+    "ip-address": "10.3.1",
     "karma": {
       "body-parser": "1.20.6"
     },
-    "minimatch@3.1.5": {
-      "brace-expansion": "1.1.18"
-    },
     "minimatch@10.2.5": {
       "brace-expansion": "5.0.9"
+    },
+    "minimatch@3.1.5": {
+      "brace-expansion": "1.1.18"
     },
     "node-gyp": {
       "tar": "7.5.22"
@@ -79,14 +67,26 @@
     "piscina": "5.2.0",
     "postcss": "8.5.18",
     "shell-quote": "1.9.0",
+    "socket.io-parser": "4.2.7",
     "tmp": "0.2.7",
     "undici": "7.29.0",
     "uuid": "11.1.1",
     "vite": "7.3.6",
     "webpack-dev-server": "5.2.6",
     "ws": "8.21.0",
-    "zrender": "6.1.0",
-    "ip-address": "10.3.1",
-    "socket.io-parser": "4.2.7"
-  }
+    "zrender": "6.1.0"
+  },
+  "private": true,
+  "scripts": {
+    "build": "ng build",
+    "ng": "ng",
+    "prebuild": "node scripts/check-node-version.mjs",
+    "prestart": "node scripts/check-node-version.mjs",
+    "pretest": "node scripts/check-node-version.mjs",
+    "prewatch": "node scripts/check-node-version.mjs",
+    "start": "ng serve",
+    "test": "ng test",
+    "watch": "ng build --watch --configuration development"
+  },
+  "version": "0.0.0"
 }

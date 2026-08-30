@@ -1,5 +1,9 @@
 import json
+import os
 from dataclasses import dataclass
+
+GATE_FAIL_THRESHOLD = float(os.getenv("GATE_FAIL_THRESHOLD", "8.0"))
+GATE_WARN_THRESHOLD = float(os.getenv("GATE_WARN_THRESHOLD", "5.0"))
 
 @dataclass
 class EvaluationResult:
@@ -34,6 +38,6 @@ def evaluate(sarif_paths):
                     max_score = max(max_score, float(score))
 
     return EvaluationResult(
-            gate_failed=max_score >= 8,
-            gate_warn=5 <= max_score < 8,
+            gate_failed=max_score >= GATE_FAIL_THRESHOLD,
+            gate_warn=GATE_WARN_THRESHOLD <= max_score < GATE_FAIL_THRESHOLD,
         )
