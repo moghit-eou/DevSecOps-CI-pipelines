@@ -82,6 +82,8 @@ The pipelines are deliberately independent. No shared state, no ordering constra
 
 **Requirements:** Docker, `make`, and Bash. Nothing else, since the scanners are installed inside the images.
 
+Container Scanning also needs the image built beforehand, and `toolbox.sh` mounts the Docker socket (`-v /var/run/docker.sock:/var/run/docker.sock`) so the toolbox can inspect it.
+
 ```bash
 git clone https://github.com/moghit-eou/DevSecOps-CI-pipelines.git
 cd DevSecOps-CI-pipelines
@@ -358,7 +360,7 @@ ECOSYSTEM: gradle
 
 ### Prefer a native CycloneDX generator over `generic`
 
-`ECOSYSTEM: generic` falls back to a Trivy filesystem scan, which needs no toolchain and suppose to work on any language. It is a convenient starting point, but it is **not** the recommended long term choice:
+`ECOSYSTEM: generic` falls back to a Trivy filesystem scan, which needs no toolchain and is meant to work on any language. In practice it depends on Trivy recognising whatever lockfile your project uses, so coverage varies and it can quietly miss dependencies. It is a convenient starting point, but it is **not** the recommended long term choice:
 
 | | Native CycloneDX plugin | `generic` (Trivy filesystem) |
 |---|---|---|
