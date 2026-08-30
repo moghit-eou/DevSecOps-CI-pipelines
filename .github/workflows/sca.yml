@@ -147,7 +147,7 @@ jobs:
 
   # ===== Test case: npm ====================================================
   sca-npm:
-    name: SCA (test-npm)
+    name: SCA (test-npm, npm)
     runs-on: ubuntu-latest
     env:
       # --- what to scan ---

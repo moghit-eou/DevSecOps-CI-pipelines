@@ -1,4 +1,4 @@
-name: SAST
+name: Static Application Security Testing (SAST)
 
 on:
   pull_request:
