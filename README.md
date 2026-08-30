@@ -66,7 +66,7 @@ To adopt these pipelines in your own project, copy **`ci/`** plus the workflow f
 |---|---|---|---|
 | **SAST** | OpenGrep with [semgrep-rules](https://github.com/semgrep/semgrep-rules) | Your source code | Any `ERROR` severity rule match |
 | **SCA** | Trivy, OSV-Scanner | A CycloneDX SBOM of your dependencies | CVSS threshold |
-| **Container Scanning** | Hadolint, OpenGrep, Trivy, OSV-Scanner | Dockerfile **and** the built image | CVSS threshold on the merged result |
+| **Container Scanning** | Hadolint, OpenGrep, Trivy, OSV-Scanner | Dockerfile **and** the built image | CVSS threshold + `ERROR` severity rule (combine both SAST and SCA) |
 
 The pipelines are deliberately independent. No shared state, no ordering constraints. Run one, run all three, run them in parallel.
 
