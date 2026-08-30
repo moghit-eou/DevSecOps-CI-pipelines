@@ -26,7 +26,7 @@ jobs:
       OSV_IGNOREFILE: ${{ github.workspace }}/ci/suppress_osv_scanner.toml
 
       SEMGREP_CONFIG_RULESETS: >-
-        semgrep-rules/dockerfile auto
+        ${{ github.workspace }}/../tools/semgrep-rules/dockerfile auto
 
       TRIVY_SCA_SARIF_OUTPUT: container-sca-trivy.sarif
       OSV_SCA_SARIF_OUTPUT: container-sca-osv-scanner.sarif
@@ -53,17 +53,15 @@ jobs:
       - name: Install scanners and rules
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
-          mkdir -p "$RUNNER_TEMP/tools" && cd "$RUNNER_TEMP/tools"
+          mkdir -p "$GITHUB_WORKSPACE/../tools" && cd "$GITHUB_WORKSPACE/../tools"
           bash "$GITHUB_WORKSPACE/ci/setup-tools.sh" \
             --install-tool trivy,osv-scanner,opengrep,hadolint,semgrep-rules
 
-      # Runs inside PROJECT: container_scan.py lints with --include=Dockerfile
-      # against the current directory, so at the repo root it would lint every Dockerfile in the repository.
+      # Runs inside PROJECT: container_scan.py scans with --include=Dockerfile
+      # against the current directory, so at the repo root it would pick up.
       - name: Lint Dockerfile (Hadolint + OpenGrep)
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         working-directory: ${{ env.PROJECT }}
-        env:
-          SEMGREP_CONFIG_RULESETS: ${{ runner.temp }}/tools/semgrep-rules/dockerfile auto
         run: python3 "$GITHUB_WORKSPACE/ci/container_scan.py" --scan-type sast
 
       # Needs the image, so this one really is gated on the build.

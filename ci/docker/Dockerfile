@@ -12,8 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY ci/ /app/ci/
-RUN chmod +x /app/ci/setup-tools.sh /app/ci/docker/entrypoints/*.sh
+COPY ci/setup-tools.sh /app/ci/setup-tools.sh
+RUN chmod +x /app/ci/setup-tools.sh
 
 
 # =============================================================================
@@ -38,6 +38,9 @@ FROM toolbox-base AS sast-toolbox
 COPY --from=toolbox-installer /usr/local/bin/opengrep /usr/local/bin/opengrep
 COPY --from=toolbox-installer /app/semgrep-rules /app/semgrep-rules
 
+COPY ci/ /app/ci/
+RUN chmod +x /app/ci/setup-tools.sh /app/ci/docker/entrypoints/*.sh
+
 WORKDIR /workspace
 ENTRYPOINT ["python3", "/app/ci/sast_scan.py"]
 
@@ -56,6 +59,9 @@ COPY --from=toolbox-installer /usr/local/bin/trivy /usr/local/bin/trivy
 COPY --from=toolbox-installer /usr/local/bin/osv-scanner /usr/local/bin/osv-scanner
 ENV TRIVY_CACHE_DIR=/app/trivy-db-cache
 COPY --from=toolbox-installer /app/trivy-db-cache /app/trivy-db-cache
+
+COPY ci/ /app/ci/
+RUN chmod +x /app/ci/setup-tools.sh /app/ci/docker/entrypoints/*.sh
 
 WORKDIR /workspace
 ENTRYPOINT ["/app/ci/docker/entrypoints/sca-entrypoint.sh"]
@@ -77,6 +83,9 @@ COPY --from=toolbox-installer /usr/local/bin/hadolint /usr/local/bin/hadolint
 COPY --from=toolbox-installer /app/semgrep-rules /app/semgrep-rules
 ENV TRIVY_CACHE_DIR=/app/trivy-db-cache
 COPY --from=toolbox-installer /app/trivy-db-cache /app/trivy-db-cache
+
+COPY ci/ /app/ci/
+RUN chmod +x /app/ci/setup-tools.sh /app/ci/docker/entrypoints/*.sh
 
 WORKDIR /workspace
 ENTRYPOINT ["python3", "/app/ci/container_scan.py"]
