@@ -22,7 +22,7 @@ OSV_SCANNER_SHA256="${OSV_SCANNER_SHA256:-15314940c10d26af9c6649f150b8a47c1262e8
 OPENGREP_VERSION="${OPENGREP_VERSION:-v1.25.0}"
 OPENGREP_SHA256="${OPENGREP_SHA256:-9ac4aebb47ba3f7b0d8fc641ac8749cb6c2f253f616131a67d9631e00d4bea33}"
 
-# renovate: datasource=github-tags depName=semgrep/semgrep-rules
+# renovate: datasource=git-refs depName=https://github.com/semgrep/semgrep-rules
 SEMGREP_RULES_REF="${SEMGREP_RULES_REF:-40b8c63f75dc7c22c8a77482d73bfb864b146f7e}"
 SEMGREP_RULES_DIR="semgrep-rules"
 

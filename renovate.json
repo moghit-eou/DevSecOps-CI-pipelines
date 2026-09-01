@@ -31,10 +31,22 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)\\s*\\nENV DOCKERIZE_VERSION=(?<currentValue>v[0-9][0-9.]*)"
       ]
+    },
+    {
+      "currentValueTemplate": "develop",
+      "customType": "regex",
+      "description": "Track a git branch head pinned as a commit SHA in CI setup scripts",
+      "managerFilePatterns": [
+        "/(^|/)setup-tools\\.sh$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>git-refs) depName=(?<depName>[^\\s]+)\\n[A-Z_]+_REF=\"\\$\\{[A-Z_]+_REF:-(?<currentDigest>[a-f0-9]{40})\\}\""
+      ]
     }
   ],
   "enabledManagers": [
-    "custom.regex"
+    "custom.regex",
+    "pre-commit"
   ],
   "extends": [
     "config:recommended"
@@ -52,17 +64,6 @@
       "matchUpdateTypes": [
         "digest"
       ]
-    },
-    {
-      "description": "Cooldown: only propose releases at least 7 days old, so yanked or compromised releases never reach a PR",
-      "matchDatasources": [
-        "github-release-attachments",
-        "github-tags",
-        "github-releases",
-        "npm",
-        "python-version"
-      ],
-      "minimumReleaseAge": "7 days"
     }
   ]
 }
