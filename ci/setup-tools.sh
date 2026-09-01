@@ -31,7 +31,7 @@ HADOLINT_VERSION="${HADOLINT_VERSION:-v2.14.0}"
 HADOLINT_SHA256="${HADOLINT_SHA256:-6bf226944684f56c84dd014e8b979d27425c0148f61b3bd99bcc6f39e9dc5a47}"
 
 # renovate: datasource=npm depName=@cyclonedx/cyclonedx-npm
-CYCLONEDX_NPM_VERSION="${CYCLONEDX_NPM_VERSION:-6.0.0}"
+CYCLONEDX_NPM_VERSION="${CYCLONEDX_NPM_VERSION:-6.0.1}"
 
 # renovate: datasource=github-releases depName=CycloneDX/cyclonedx-gomod
 CYCLONEDX_GOMOD_VERSION="${CYCLONEDX_GOMOD_VERSION:-v1.12.0}"
