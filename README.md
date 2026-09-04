@@ -288,7 +288,7 @@ The minimum to edit:
 
 For a multi project repository, copy the workflow once per project and point `PROJECT` at each folder.
 
-**Worked example:** [platform-backend](https://github.com/Medical-Informatics-Platform/platform-backend/pulls), a Maven project adopting these pipelines.
+**Worked example:** [datacatalog PR #1](https://github.com/moghit-eou/datacatalog/pull/1), a multi project repository adopting these pipelines, one workflow per folder.
 
 ---
 
