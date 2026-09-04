@@ -48,23 +48,14 @@ ENTRYPOINT ["python3", "/app/ci/sast_scan.py"]
 
 
 # =============================================================================
-# Stage: sca-toolbox -- Trivy + OSV-Scanner + Trivy DB + build toolchains
-#                        for the SBOM step (Maven, Go). Node/npm is not installed.
+# Stage: sca-toolbox -- Trivy + OSV-Scanner + Trivy DB + Maven/Node/Go...etc
 # =============================================================================
 FROM toolbox-base AS sca-toolbox
 
-# Build toolchains needed by `setup-tools.sh --sbom-ecosystem <maven|golang>`.
-# cyclonedx-gomod shells out to `go`, so the Go toolchain must be present even
-# though the cyclonedx-gomod binary itself is downloaded (SHA256 pinned) at run time.
+# install maven,npm... if you want accurate scanning for SCA tools like Trivy and OSV-Scanner
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      maven golang-go \
+      maven \
     && rm -rf /var/lib/apt/lists/*
-
-# The distro ships Go 1.22. Force GOTOOLCHAIN=auto (distro packages may default
-# to `local`) so Go fetches the newer toolchain a project's go.mod demands,
-# verified via the Go checksum database. Without this, any project on a newer
-# Go than the distro's would fail the SBOM step.
-ENV GOTOOLCHAIN=auto
 
 COPY --from=toolbox-installer /usr/local/bin/trivy /usr/local/bin/trivy
 COPY --from=toolbox-installer /usr/local/bin/osv-scanner /usr/local/bin/osv-scanner
