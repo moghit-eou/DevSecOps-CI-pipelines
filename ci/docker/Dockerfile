@@ -2,7 +2,9 @@
 # Stage: toolbox-base -- OS-level deps + ci/ scripts only. No scanning
 #                         tools installed here.
 # =============================================================================
-FROM ubuntu:24.04 AS toolbox-base
+# Digest-pinned: the tag alone can be re-pointed upstream at any time. Renovate
+# bumps the digest (dockerfile manager, pinDigests) after the 7-day release age.
+FROM ubuntu:24.04@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS toolbox-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -46,14 +48,23 @@ ENTRYPOINT ["python3", "/app/ci/sast_scan.py"]
 
 
 # =============================================================================
-# Stage: sca-toolbox -- Trivy + OSV-Scanner + Trivy DB + Maven/Node/Go...etc
+# Stage: sca-toolbox -- Trivy + OSV-Scanner + Trivy DB + build toolchains
+#                        for the SBOM step (Maven, Go). Node/npm is not installed.
 # =============================================================================
 FROM toolbox-base AS sca-toolbox
 
-# install maven,npm... if you want accurate scanning for SCA tools like Trivy and OSV-Scanner
+# Build toolchains needed by `setup-tools.sh --sbom-ecosystem <maven|golang>`.
+# cyclonedx-gomod shells out to `go`, so the Go toolchain must be present even
+# though the cyclonedx-gomod binary itself is downloaded (SHA256 pinned) at run time.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      maven \
+      maven golang-go \
     && rm -rf /var/lib/apt/lists/*
+
+# The distro ships Go 1.22. Force GOTOOLCHAIN=auto (distro packages may default
+# to `local`) so Go fetches the newer toolchain a project's go.mod demands,
+# verified via the Go checksum database. Without this, any project on a newer
+# Go than the distro's would fail the SBOM step.
+ENV GOTOOLCHAIN=auto
 
 COPY --from=toolbox-installer /usr/local/bin/trivy /usr/local/bin/trivy
 COPY --from=toolbox-installer /usr/local/bin/osv-scanner /usr/local/bin/osv-scanner
