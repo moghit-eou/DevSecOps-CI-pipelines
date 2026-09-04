@@ -2,7 +2,7 @@
 
 Three reusable security pipelines (**SAST**, **SCA**, and **Container Scanning**) that run identically on your laptop and in GitHub Actions.
 
-Each pipeline runs open source scanners, normalises their output to [SARIF](https://sarifweb.azurewebsites.net/), and applies a shared gate. Locally they run in purpose-built Docker images through a `make` command. In CI they run natively on the runner through the same `ci/` scripts. Same scripts, same pinned tool versions, same thresholds, so a finding you reproduce locally is the finding CI reports.
+Each pipeline runs open source scanners, normalises their output to [SARIF](https://sarifweb.azurewebsites.net/), and applies a shared gate. Locally they run in purpose-built Docker images through a `make` command. In CI they run natively on the runner through the same `ci/` scripts.Nothing differs between the two environments except where the scripts run, so a finding you reproduce locally is exactly what CI reports.
 
 Developed as part of **Google Summer of Code 2026** with [EBRAINS](https://www.ebrains.eu/), following the [OWASP DevSecOps Guideline](https://owasp.org/www-project-devsecops-guideline/), and deployed in the [Medical Informatics Platform](https://github.com/Medical-Informatics-Platform).
 
