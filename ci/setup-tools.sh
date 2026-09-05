@@ -157,11 +157,11 @@ case "$SBOM_ECOSYSTEM" in
     # cyclonedx-npm reads the installed dependency tree, so resolve first, the
     # mirror image of `mvn dependency:resolve` above. --ignore-scripts: the SBOM
     # step must never execute lifecycle scripts of the scanned dependencies.
-    npm ci --ignore-scripts --no-audit --no-fund
+    npm ci --ignore-scripts --no-audit --no-fund --loglevel=error
     # The SBOM tool itself comes from ci/sbom-npm/package-lock.json, so every
     # byte it runs is sha512-pinned, unlike `npx <pkg>@<version>` which resolves
     # the tool's own dependencies fresh on every run.
-    npm ci --ignore-scripts --no-audit --no-fund --prefix "${SCRIPT_DIR}/sbom-npm"
+    npm ci --ignore-scripts --no-audit --no-fund --loglevel=error --prefix "${SCRIPT_DIR}/sbom-npm"
     mkdir -p target
     "${SCRIPT_DIR}/sbom-npm/node_modules/.bin/cyclonedx-npm" --output-file target/bom.json
     ;;

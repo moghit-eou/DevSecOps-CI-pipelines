@@ -54,7 +54,7 @@ FROM toolbox-base AS sca-toolbox
 
 # install maven,npm... if you want accurate scanning for SCA tools like Trivy and OSV-Scanner
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      maven \
+      maven npm golang-go \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=toolbox-installer /usr/local/bin/trivy /usr/local/bin/trivy
