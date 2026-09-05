@@ -15,13 +15,13 @@ Developed as part of **Google Summer of Code 2026** with [EBRAINS](https://www.e
 - [Quick Start](#quick-start)
 - [Running Locally: the Makefile](#running-locally-the-makefile)
 - [Running in CI: GitHub Actions](#running-in-ci-github-actions)
+- [Adopting in Your Own Repository](#adopting-in-your-own-repository)
 - [The Gate](#the-gate)
 - [Reading SARIF Reports](#reading-sarif-reports)
 - [Configuring Semgrep Rulesets](#configuring-semgrep-rulesets)
 - [Adding Your Own Ecosystem](#adding-your-own-ecosystem)
 - [Suppressing a False Positive](#suppressing-a-false-positive)
 - [Environment Variables](#environment-variables)
-- [Reproducibility](#reproducibility)
 - [Related Resources](#related-resources)
 
 ---
@@ -247,6 +247,51 @@ The Dockerfile pass runs **inside `PROJECT`** on purpose. `container_scan.py` sc
 
 ---
 
+## Adopting in Your Own Repository
+
+Copy two folders. No submodule, no action to install.
+
+| Step | What to do |
+|---|---|
+| 1 | Copy `ci/` to your repository root. Drop `ci/docker/` unless you also want the local `make` flow. |
+| 2 | Copy the workflows you need from `.github/workflows/`. |
+| 3 | Set `PROJECT` and `ECOSYSTEM` in each workflow's `env:` block. |
+| 4 | Adjust thresholds, rulesets and suppression paths, see [Environment Variables](#environment-variables). |
+
+What lands in your repository:
+
+```
+your-repo/
+├── ci/
+│   ├── setup-tools.sh
+│   ├── sast_scan.py
+│   ├── sca_scan.py
+│   ├── container_scan.py
+│   ├── parse_sarif.py
+│   ├── suppress_trivy.yaml
+│   └── suppress_osv_scanner.toml
+└── .github/workflows/
+    ├── sast.yml
+    ├── sca.yml
+    └── container-scan.yml
+```
+
+The minimum to edit:
+
+```yaml
+    env:
+      PROJECT: .                    # folder to scan, relative to the repository root
+      ECOSYSTEM: maven              # SCA only: maven | npm | golang | generic | none
+      GATE_FAIL_THRESHOLD: "8.0"
+      GATE_WARN_THRESHOLD: "5.0"
+```
+
+For a multi project repository, copy the workflow once per project and point `PROJECT` at each folder.
+
+**Worked example:** [datacatalog PR #1](https://github.com/moghit-eou/datacatalog/pull/1), a multi project repository adopting these pipelines, one workflow per folder.
+
+---
+
 ## The Gate
 
 SCA and Container Scanning read the `security-severity` property (CVSS score) from every SARIF result and take the maximum:
@@ -461,23 +506,6 @@ Set these in a workflow `env:` block for CI, or in `ci/docker/env/*.env` for loc
 | `HADOLINT_SAST_SARIF_OUTPUT` | | Dockerfile findings from Hadolint |
 
 **Tool versions** are pinned in `ci/setup-tools.sh` and overridable by environment variable. Every binary is verified against a pinned SHA256, so overriding a `*_VERSION` requires overriding the matching `*_SHA256` too. [Renovate](https://docs.renovatebot.com/) markers keep both in sync automatically.
-
----
-
-## Reproducibility
-
-Design choices that make results deterministic and comparable:
-
-| Concern | How it is handled |
-|---|---|
-| Scanner versions | Pinned in `ci/setup-tools.sh`, one source for local and CI |
-| Binary integrity | Every download verified against a pinned SHA256 |
-| Ruleset version | `SEMGREP_RULES_REF` pins an exact semgrep-rules commit |
-| Action versions | GitHub Actions pinned by commit SHA, not floating tags |
-| Local equals CI | Same `ci/` scripts, same variables, same thresholds on both paths |
-| Dependency resolution | Lives in `setup-tools.sh`, so both paths resolve identically |
-
-The Trivy vulnerability database is downloaded at image build time locally, and at scan time in CI. Because that database is updated continuously, **the same code scanned on different dates can produce different findings.** This is expected, and reflects newly disclosed vulnerabilities rather than pipeline nondeterminism.
 
 ---
 
