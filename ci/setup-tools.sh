@@ -30,11 +30,16 @@ SEMGREP_RULES_DIR="semgrep-rules"
 HADOLINT_VERSION="${HADOLINT_VERSION:-v2.14.0}"
 HADOLINT_SHA256="${HADOLINT_SHA256:-6bf226944684f56c84dd014e8b979d27425c0148f61b3bd99bcc6f39e9dc5a47}"
 
-# renovate: datasource=npm depName=@cyclonedx/cyclonedx-npm
-CYCLONEDX_NPM_VERSION="${CYCLONEDX_NPM_VERSION:-6.0.0}"
+# renovate: datasource=maven depName=org.cyclonedx:cyclonedx-maven-plugin
+CYCLONEDX_MAVEN_VERSION="${CYCLONEDX_MAVEN_VERSION:-2.9.3}"
 
-# renovate: datasource=github-releases depName=CycloneDX/cyclonedx-gomod
+# @cyclonedx/cyclonedx-npm is pinned, with its whole dependency tree, by the
+# sha512 integrity fields in sbom-npm/package-lock.json next to this script.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# renovate: datasource=github-release-attachments depName=CycloneDX/cyclonedx-gomod
 CYCLONEDX_GOMOD_VERSION="${CYCLONEDX_GOMOD_VERSION:-v1.12.0}"
+CYCLONEDX_GOMOD_SHA256="${CYCLONEDX_GOMOD_SHA256:-004b9f5cc595b797fb5423e2ae4c97bcf0f18c712ed2faee1640b09e5efd6d15}"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -141,21 +146,37 @@ fi
 case "$SBOM_ECOSYSTEM" in
   maven)
     echo "Generating SBOM for Maven project ... this may take a while"
-    mvn -B -ntp dependency:resolve -q
-    mvn -B -ntp org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom -q
+    # -C (--strict-checksums): fail on any artifact whose published checksum does
+    # not match instead of warning. Maven has no lockfile, so this plus exact
+    # versions in the pom is the strongest pin available.
+    mvn -B -ntp -C dependency:resolve -q
+    mvn -B -ntp -C "org.cyclonedx:cyclonedx-maven-plugin:${CYCLONEDX_MAVEN_VERSION}:makeAggregateBom" -q
     ;;
   npm)
     echo "Generating SBOM for NPM project ... this may take a while"
-    # cyclonedx-npm reads the installed dependency tree, so resolve first
-    # the mirror image of `mvn dependency:resolve` in the maven branch above.
-    npm ci
-    npx --yes "@cyclonedx/cyclonedx-npm@${CYCLONEDX_NPM_VERSION}" --output-file target/bom.json
+    # cyclonedx-npm reads the installed dependency tree, so resolve first, the
+    # mirror image of `mvn dependency:resolve` above. --ignore-scripts: the SBOM
+    # step must never execute lifecycle scripts of the scanned dependencies.
+    npm ci --ignore-scripts --no-audit --no-fund --loglevel=error
+    # The SBOM tool itself comes from ci/sbom-npm/package-lock.json, so every
+    # byte it runs is sha512-pinned, unlike `npx <pkg>@<version>` which resolves
+    # the tool's own dependencies fresh on every run.
+    npm ci --ignore-scripts --no-audit --no-fund --loglevel=error --prefix "${SCRIPT_DIR}/sbom-npm"
+    mkdir -p target
+    "${SCRIPT_DIR}/sbom-npm/node_modules/.bin/cyclonedx-npm" --output-file target/bom.json
     ;;
   golang|go)
     echo "Generating SBOM for Go project ... this may take a while"
     mkdir -p target
-    go install "github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@${CYCLONEDX_GOMOD_VERSION}"
-    "$(go env GOPATH)/bin/cyclonedx-gomod" mod -json -output target/bom.json
+    # Prebuilt release binary, SHA256 pinned like the scanners above. Still needs
+    # the Go toolchain at runtime: cyclonedx-gomod shells out to `go` to resolve modules.
+    GOMOD_TARBALL="cyclonedx-gomod_${CYCLONEDX_GOMOD_VERSION#v}_linux_amd64.tar.gz"
+    download_and_verify \
+      "https://github.com/CycloneDX/cyclonedx-gomod/releases/download/${CYCLONEDX_GOMOD_VERSION}/${GOMOD_TARBALL}" \
+      "${TMP_DIR}/${GOMOD_TARBALL}" \
+      "${CYCLONEDX_GOMOD_SHA256}"
+    tar -xzf "${TMP_DIR}/${GOMOD_TARBALL}" -C "${TMP_DIR}" cyclonedx-gomod
+    "${TMP_DIR}/cyclonedx-gomod" mod -json -output target/bom.json
     ;;
   generic|auto)
     echo "Generating SBOM via generic Trivy filesystem scan (less accurate)"

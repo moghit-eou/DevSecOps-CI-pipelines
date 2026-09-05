@@ -2,7 +2,9 @@
 # Stage: toolbox-base -- OS-level deps + ci/ scripts only. No scanning
 #                         tools installed here.
 # =============================================================================
-FROM ubuntu:24.04 AS toolbox-base
+# Digest-pinned: the tag alone can be re-pointed upstream at any time. Renovate
+# bumps the digest (dockerfile manager, pinDigests) after the 7-day release age.
+FROM ubuntu:24.04@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS toolbox-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -55,7 +57,7 @@ FROM toolbox-base AS sca-toolbox
 # cyclonedx-gomod is built at run time by `go install` (version pinned, verified
 # against the Go checksum database), so the Go toolchain must be present here.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      maven golang-go \
+      maven npm golang-go \
     && rm -rf /var/lib/apt/lists/*
 
 # Ubuntu's Go package defaults to GOTOOLCHAIN=local. `auto` lets Go fetch the
